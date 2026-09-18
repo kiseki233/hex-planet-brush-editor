@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from .i18n import t
 
 MIN_ZOOM = 0.8
 MAX_ZOOM = 512.0
@@ -68,7 +69,7 @@ class ZoomTier:
 ZOOM_TIERS: tuple[ZoomTier, ...] = (
     ZoomTier(
         index=0,
-        name="L0 原图",
+        name=t("L0 原图"),
         zoom_floor=110.0,
         render="cell_texture",
         texture_lod=0,
@@ -76,11 +77,11 @@ ZOOM_TIERS: tuple[ZoomTier, ...] = (
         min_diameter=1,
         suggested_diameter=2,
         max_diameter=35,
-        description="512×512 逐格纹理",
+        description=t("512×512 逐格纹理"),
     ),
     ZoomTier(
         index=1,
-        name="L1 精细",
+        name=t("L1 精细"),
         zoom_floor=38.0,
         render="cell_texture",
         texture_lod=1,
@@ -88,11 +89,11 @@ ZOOM_TIERS: tuple[ZoomTier, ...] = (
         min_diameter=1,
         suggested_diameter=6,
         max_diameter=100,
-        description="256×256 逐格纹理",
+        description=t("256×256 逐格纹理"),
     ),
     ZoomTier(
         index=2,
-        name="L2 常用",
+        name=t("L2 常用"),
         zoom_floor=13.0,
         render="cell_texture",
         texture_lod=2,
@@ -100,11 +101,11 @@ ZOOM_TIERS: tuple[ZoomTier, ...] = (
         min_diameter=1,
         suggested_diameter=19,
         max_diameter=300,
-        description="128×128 逐格纹理",
+        description=t("128×128 逐格纹理"),
     ),
     ZoomTier(
         index=3,
-        name="L3 区域",
+        name=t("L3 区域"),
         zoom_floor=4.5,
         render="cell_color",
         texture_lod=3,
@@ -112,11 +113,11 @@ ZOOM_TIERS: tuple[ZoomTier, ...] = (
         min_diameter=1,
         suggested_diameter=54,
         max_diameter=500,
-        description="64×64 逐格纹理／逐格代表色",
+        description=t("64×64 逐格纹理／逐格代表色"),
     ),
     ZoomTier(
         index=4,
-        name="L4 地块",
+        name=t("L4 地块"),
         zoom_floor=1.6,
         render="chunk",
         texture_lod=None,
@@ -124,11 +125,11 @@ ZOOM_TIERS: tuple[ZoomTier, ...] = (
         min_diameter=32,
         suggested_diameter=150,
         max_diameter=500,
-        description="按逻辑区块聚合显示（258 格/块）",
+        description=t("按逻辑区块聚合显示（258 格/块）"),
     ),
     ZoomTier(
         index=5,
-        name="L5 全球",
+        name=t("L5 全球"),
         zoom_floor=MIN_ZOOM,
         render="surface",
         texture_lod=None,
@@ -136,7 +137,7 @@ ZOOM_TIERS: tuple[ZoomTier, ...] = (
         min_diameter=64,
         suggested_diameter=300,
         max_diameter=500,
-        description="整球缩略地表／多层聚合远景",
+        description=t("整球缩略地表／多层聚合远景"),
     ),
 )
 

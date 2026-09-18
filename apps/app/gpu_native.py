@@ -41,6 +41,7 @@ from .gpu_edit import (
 from .topology import DualTopology
 from .png_pixels import PixelImage, read_png_pixels
 from .zoom_tiers import drag_radians_per_pixel
+from .i18n import t
 
 VERTEX_SHADER_SOURCE = r"""#version 330 core
 layout(location = 0) in float inCornerSelector;
@@ -478,7 +479,7 @@ class _Win32GpuPreview:
         self.min_zoom = max(0.25, min(512.0, float(min_zoom)))
         self.base_title = title
         self.selected_instance = -1
-        self.last_status = "右键拖动旋转；按住左键连续绘制；P/E 工具；Ctrl+S 保存"
+        self.last_status = t("右键拖动旋转；按住左键连续绘制；P/E 工具；Ctrl+S 保存")
         self.texture_pixels: list[bytes | None] = []
         self.texture_sources: list[Path | None] = []
         self.texture_placeholder = b""
@@ -1070,7 +1071,7 @@ class _Win32GpuPreview:
     def _apply_cell_patch(self, patch: GpuCellPatch) -> None:
         instance_index = self.instance_by_cell.get(patch.cell_id)
         if instance_index is None:
-            self.last_status = f"CellId {patch.cell_id} 不在当前 GPU 实例批次中"
+            self.last_status = t("CellId {cell_id} 不在当前 GPU 实例批次中", cell_id=patch.cell_id)
             self._update_window_title()
             return
         layer = self._ensure_texture_layer(patch)
@@ -1207,7 +1208,7 @@ class _Win32GpuPreview:
                         "GPU stream desynchronised; requesting a full batch reset"
                     )
                     self.stream_resync_pending = True
-                    self.last_status = "GPU 数据流不同步，正在自动恢复完整视图……"
+                    self.last_status = t("GPU 数据流不同步，正在自动恢复完整视图……")
                     self._update_window_title()
                     try:
                         bridge.submit_resync(str(exc))
@@ -1460,7 +1461,7 @@ class _Win32GpuPreview:
         except GpuEditError as exc:
             self.last_status = str(exc)
             return
-        self.last_status = f"已提交视图请求 {request_id}，等待 LOD 流"
+        self.last_status = t("已提交视图请求 {request_id}，等待 LOD 流", request_id=request_id)
         self._update_window_title()
         self.last_view_submit = now
         self.last_submitted_view = (
@@ -1478,21 +1479,19 @@ class _Win32GpuPreview:
             return
         state = self.edit_bridge.tool_state() if self.edit_bridge is not None else None
         if state is None:
-            mode = "只读预览"
+            mode = t("只读预览")
         else:
-            mode = f"{'放置' if state.tool == 'paint' else '清除'} / {state.rotation * 60}°"
+            mode = t("{value} / {value2}°", value=t('放置') if state.tool == 'paint' else t('清除'), value2=state.rotation * 60)
         reserved_bytes = (
             self.texture_capacity * texture_layer_bytes(self.batch.padded_size)
             if self.texture_capacity > 0
             else 0
         )
         texture_status = (
-            f"纹理 {len(self.texture_key_to_layer):,}/{self.maximum_texture_layers:,} 层"
-            f" · 预留 {reserved_bytes / (1024 ** 3):.2f} GiB"
-            f" · 缩放 {self.zoom:.2f}×"
+            t("纹理 {len:,}/{maximum_texture_layers:,} 层 · 预留 {value:.2f} GiB · 缩放 {zoom:.2f}×", len=len(self.texture_key_to_layer), maximum_texture_layers=self.maximum_texture_layers, value=reserved_bytes / (1024 ** 3), zoom=self.zoom)
         )
         if self.pending_texture_uploads:
-            texture_status += f" · 待上传 {len(self.pending_texture_uploads):,} 层"
+            texture_status += t(" · 待上传 {len:,} 层", len=len(self.pending_texture_uploads))
         text = f"{self.base_title} | {mode} | {texture_status} | {self.last_status}"
         self.user32.SetWindowTextW(self.hwnd, text[:500])
 
@@ -1617,12 +1616,12 @@ class _Win32GpuPreview:
         self, x: int, y: int, *, phase: str, stroke_id: int
     ) -> int | None:
         if self.picker is None or self.edit_bridge is None:
-            self.last_status = "当前窗口没有连接地图编辑会话"
+            self.last_status = t("当前窗口没有连接地图编辑会话")
             self._update_window_title()
             return None
         if not self.editable:
             self.selected_instance = -1
-            self.last_status = "当前视图不可编辑"
+            self.last_status = t("当前视图不可编辑")
             self._update_window_title()
             return None
         result = self.picker.pick_screen(
@@ -1630,12 +1629,12 @@ class _Win32GpuPreview:
         )
         if result is None:
             self.selected_instance = -1
-            self.last_status = "未命中星球"
+            self.last_status = t("未命中星球")
             self._update_window_title()
             return None
         self.selected_instance = -1 if result.instance_index is None else result.instance_index
         if result.cell_id in set(self.picker.topology.pentagon_ids):
-            self.last_status = f"CellId {result.cell_id} 是隐藏五边形，不能编辑"
+            self.last_status = t("CellId {cell_id} 是隐藏五边形，不能编辑", cell_id=result.cell_id)
             self._update_window_title()
             return None
         # A cell outside the current instance stream is still a real map cell:
@@ -1658,9 +1657,7 @@ class _Win32GpuPreview:
         self.last_paint_cell = result.cell_id
         state = self.edit_bridge.tool_state()
         self.last_status = (
-            f"连续笔划已提交 CellId {result.cell_id}："
-            f"{'随机笔刷组覆盖' if state.tool == 'paint' else '清除'}，"
-            f"直径 {state.brush_diameter} 格"
+            t("连续笔划已提交 CellId {cell_id}：{value}，直径 {brush_diameter} 格", cell_id=result.cell_id, value=t('随机笔刷组覆盖') if state.tool == 'paint' else t('清除'), brush_diameter=state.brush_diameter)
         )
         self._update_window_title()
         return result.cell_id
@@ -1684,15 +1681,15 @@ class _Win32GpuPreview:
         try:
             if key == self.VK_P:
                 bridge.set_tool("paint")
-                self.last_status = "GPU 工具切换为放置"
+                self.last_status = t("GPU 工具切换为放置")
             elif key == self.VK_E:
                 bridge.set_tool("erase")
-                self.last_status = "GPU 工具切换为清除"
+                self.last_status = t("GPU 工具切换为清除")
             elif key == self.VK_R:
-                self.last_status = "当前笔刷每格自动随机选择 0°～300° 六方向旋转"
+                self.last_status = t("当前笔刷每格自动随机选择 0°～300° 六方向旋转")
             elif key == self.VK_S and self.user32.GetKeyState(self.VK_CONTROL) < 0:
                 bridge.submit_save()
-                self.last_status = "已请求保存脏区块"
+                self.last_status = t("已请求保存脏区块")
             else:
                 return False
         except GpuEditError as exc:

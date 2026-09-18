@@ -95,9 +95,10 @@ python -m unittest discover -s tests
 
 ```text
 apps/
-  app/          52 modules: topology, storage, LOD, GPU streaming, UI
+  app/          53 modules: topology, storage, LOD, GPU streaming, UI
+    locales/    en.json, ja.json (Chinese is the source language)
   tests/        265 tests
-  tools/        placeholder brush generator and helpers
+  tools/        placeholder brush generator, message extractor
   *.md          design notes, one per subsystem
   start.bat     entry point
 art/
@@ -110,9 +111,26 @@ Design notes worth reading first: `apps/PRODUCTION_TOPOLOGY.md`, `apps/TOPOLOGY_
 
 ---
 
+## Languages
+
+The interface ships in **Chinese, English and Japanese**. On first run the language follows the system locale and falls back to English; a selector in the status bar changes it, and the choice is remembered. Startup errors from the launcher are shown in all three languages at once, since they can appear before any preference is loaded.
+
+Override it for one run:
+
+```powershell
+$env:KISEKI_LANGUAGE = "ja"
+.\apps\start.bat
+```
+
+Adding a language means dropping `<code>.json` into `apps/app/locales/` — no code change. The Chinese source text is the lookup key, so an incomplete catalog degrades to Chinese rather than to blank labels. To see what a catalog is missing:
+
+```powershell
+python apps\tools\extract_messages.py --template
+```
+
 ## Status
 
-Version 1.3.1. The software-side path described in `apps/README.md` is complete and covered by tests. Some launcher and UI strings are still Chinese only.
+Version 1.3.1. The software-side path described in `apps/README.md` is complete and covered by tests.
 
 ## License
 

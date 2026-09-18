@@ -9,6 +9,7 @@ from typing import Iterable
 from .gpu_batch import GpuRenderBatch
 from .gpu_stream import GpuInstancePatch
 from .topology import DualTopology
+from .i18n import t
 
 
 class GpuEditError(ValueError):
@@ -94,7 +95,7 @@ class GpuSurfaceTexturePatch:
     height: int
     channels: int
     pixels: bytes
-    message: str = "星球缩略地表已更新"
+    message: str = t("星球缩略地表已更新")
 
 
 @dataclass(frozen=True)
@@ -106,7 +107,7 @@ class GpuSurfaceRegionPatch:
     height: int
     channels: int
     pixels: bytes
-    message: str = "L5 远景局部纹理已更新"
+    message: str = t("L5 远景局部纹理已更新")
 
 
 @dataclass(frozen=True)

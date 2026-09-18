@@ -36,6 +36,7 @@ from .seam_validation import validate_topology_seams
 from .sphere_map_store import SphereMapStore
 from .stress_validation import run_texture_stress
 from .windows_diagnostics import collect_windows_diagnostics
+from .i18n import t
 
 
 @dataclass(frozen=True)
@@ -322,26 +323,26 @@ def run_final_acceptance(
             (
                 BrushRecord(
                     uid="acceptance-a",
-                    relative_path="城市/a.png",
+                    relative_path=t("城市/a.png"),
                     content_hash="a" * 64,
                     file_size=1,
                     width=512,
                     height=512,
                     color_mode="RGB",
-                    category_path="城市",
+                    category_path=t("城市"),
                     modified_time_ns=0,
                     state="active",
                     last_seen_utc=0,
                 ),
                 BrushRecord(
                     uid="acceptance-b",
-                    relative_path="城市/b.png",
+                    relative_path=t("城市/b.png"),
                     content_hash="b" * 64,
                     file_size=1,
                     width=512,
                     height=512,
                     color_mode="RGB",
-                    category_path="城市",
+                    category_path=t("城市"),
                     modified_time_ns=0,
                     state="active",
                     last_seen_utc=0,
@@ -397,7 +398,7 @@ def run_final_acceptance(
 
         acceptance_brush_root = paths.runtime_root / "acceptance_cropper_brushes"
         shutil.rmtree(acceptance_brush_root, ignore_errors=True)
-        city_root = acceptance_brush_root / "城市"
+        city_root = acceptance_brush_root / t("城市")
         city_root.mkdir(parents=True, exist_ok=True)
         written[0].replace(city_root / written[0].name)
         scan = BrushCatalog(acceptance_brush_root).scan()

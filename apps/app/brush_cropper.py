@@ -19,6 +19,7 @@ from .brush_cropper_core import (
 )
 from .paths import ProjectPaths
 from .png_pixels import PixelImage, PngPixelError, read_png_pixels
+from .i18n import t
 
 
 class BrushImageCropper:
@@ -31,7 +32,7 @@ class BrushImageCropper:
     ) -> None:
         self.paths = paths
         self.window = tk.Toplevel(parent)
-        self.window.title("地图图片裁剪器 v1.3.1")
+        self.window.title(t("地图图片裁剪器 v1.3.1"))
         self.window.geometry("1220x820")
         self.window.minsize(980, 680)
         self.window.protocol("WM_DELETE_WINDOW", self._close)
@@ -54,12 +55,12 @@ class BrushImageCropper:
         self.preview_photo: tk.PhotoImage | None = None
         self.export_running = False
 
-        self.source_info = tk.StringVar(value="尚未打开源图")
+        self.source_info = tk.StringVar(value=t("尚未打开源图"))
         self.image_scale_percent = tk.DoubleVar(value=100.0)
         self.view_percent = tk.StringVar(value="50%")
-        self.next_output_name = tk.StringVar(value="下一张：001.png")
-        self.selection_info = tk.StringVar(value="已选择 1×1，共1张")
-        self.status = tk.StringVar(value="先打开源图；导入后不会自动裁剪")
+        self.next_output_name = tk.StringVar(value=t("下一张：001.png"))
+        self.selection_info = tk.StringVar(value=t("已选择 1×1，共1张"))
+        self.status = tk.StringVar(value=t("先打开源图；导入后不会自动裁剪"))
 
         self._build_ui()
         self._update_next_output_name()
@@ -72,14 +73,14 @@ class BrushImageCropper:
         root.columnconfigure(0, weight=1)
         root.rowconfigure(1, weight=1)
 
-        toolbar = ttk.LabelFrame(root, text="源图与比例", padding=8)
+        toolbar = ttk.LabelFrame(root, text=t("源图与比例"), padding=8)
         toolbar.grid(row=0, column=0, sticky="ew", pady=(0, 8))
         toolbar.columnconfigure(4, weight=1)
 
-        ttk.Button(toolbar, text="打开源图 PNG", command=self._choose_source).grid(
+        ttk.Button(toolbar, text=t("打开源图 PNG"), command=self._choose_source).grid(
             row=0, column=0, rowspan=2, sticky="ns", padx=(0, 8)
         )
-        ttk.Label(toolbar, text="图片实际缩放").grid(row=0, column=1, sticky="w")
+        ttk.Label(toolbar, text=t("图片实际缩放")).grid(row=0, column=1, sticky="w")
         scale_spin = ttk.Spinbox(
             toolbar,
             from_=1.0,
@@ -100,7 +101,7 @@ class BrushImageCropper:
         ttk.Label(toolbar, textvariable=self.source_info, wraplength=480).grid(
             row=0, column=4, rowspan=2, sticky="w"
         )
-        ttk.Label(toolbar, text="工作区查看倍率").grid(row=0, column=5, sticky="w", padx=(10, 0))
+        ttk.Label(toolbar, text=t("工作区查看倍率")).grid(row=0, column=5, sticky="w", padx=(10, 0))
         view_combo = ttk.Combobox(
             toolbar,
             state="readonly",
@@ -119,8 +120,8 @@ class BrushImageCropper:
         canvas_frame = ttk.LabelFrame(
             body,
             text=(
-                "裁剪工作区：滚轮缩放源图；右键拖动源图；中键拖动查看区域；"
-                "左键拖动框选多个512×512格"
+                t("裁剪工作区：滚轮缩放源图；右键拖动源图；中键拖动查看区域；"
+                "左键拖动框选多个512×512格")
             ),
             padding=4,
         )
@@ -143,24 +144,24 @@ class BrushImageCropper:
         self.canvas.bind("<B1-Motion>", self._selection_move)
         self.canvas.bind("<ButtonRelease-1>", self._selection_end)
 
-        panel = ttk.LabelFrame(body, text="裁剪与导出", padding=10)
+        panel = ttk.LabelFrame(body, text=t("裁剪与导出"), padding=10)
         panel.grid(row=0, column=1, sticky="ns")
         panel.columnconfigure(0, weight=1)
 
         ttk.Label(
             panel,
             text=(
-                "每个网格输出一张512×512 PNG。六边形线表示地图中真正可见的区域，"
-                "四角仍会保留在PNG中，但放入地图后不会显示。"
+                t("每个网格输出一张512×512 PNG。六边形线表示地图中真正可见的区域，"
+                "四角仍会保留在PNG中，但放入地图后不会显示。")
             ),
             wraplength=265,
             justify=tk.LEFT,
         ).grid(row=0, column=0, sticky="w")
         ttk.Separator(panel).grid(row=1, column=0, sticky="ew", pady=10)
-        ttk.Label(panel, text="统一输出目录").grid(row=2, column=0, sticky="w")
+        ttk.Label(panel, text=t("统一输出目录")).grid(row=2, column=0, sticky="w")
         ttk.Label(
             panel,
-            text="art/data/（不建立分类子文件夹）",
+            text=t("art/data/（不建立分类子文件夹）"),
             wraplength=265,
         ).grid(row=3, column=0, sticky="w", pady=(2, 4))
         ttk.Label(panel, textvariable=self.next_output_name).grid(
@@ -171,20 +172,20 @@ class BrushImageCropper:
         )
         self.export_button = ttk.Button(
             panel,
-            text="导出选中格子到 art/data",
+            text=t("导出选中格子到 art/data"),
             command=self._export,
             state=tk.DISABLED,
         )
         self.export_button.grid(row=7, column=0, sticky="ew", pady=(10, 0))
-        ttk.Button(panel, text="重新居中显示源图", command=self._fit_source_view).grid(
+        ttk.Button(panel, text=t("重新居中显示源图"), command=self._fit_source_view).grid(
             row=8, column=0, sticky="ew", pady=(6, 0)
         )
         ttk.Separator(panel).grid(row=9, column=0, sticky="ew", pady=10)
         ttk.Label(
             panel,
             text=(
-                "比例对齐方法：把源图上的3 km比例尺移动到画布上方的标尺下面，"
-                "再用滚轮调整源图大小，直到两端长度一致。标尺宽度始终等于一个地图格。"
+                t("比例对齐方法：把源图上的3 km比例尺移动到画布上方的标尺下面，"
+                "再用滚轮调整源图大小，直到两端长度一致。标尺宽度始终等于一个地图格。")
             ),
             wraplength=265,
             justify=tk.LEFT,
@@ -197,12 +198,12 @@ class BrushImageCropper:
     def _choose_source(self) -> None:
         path = filedialog.askopenfilename(
             parent=self.window,
-            title="选择需要裁剪的源图",
-            filetypes=(("PNG图片", "*.png"), ("所有文件", "*.*")),
+            title=t("选择需要裁剪的源图"),
+            filetypes=((t("PNG图片"), "*.png"), (t("所有文件"), "*.*")),
         )
         if not path:
             return
-        self.status.set("正在读取源图……")
+        self.status.set(t("正在读取源图……"))
         self.export_button.configure(state=tk.DISABLED)
 
         def worker() -> None:
@@ -231,7 +232,7 @@ class BrushImageCropper:
         self._fit_source_view()
         self._update_selection_info()
         self.export_button.configure(state=tk.NORMAL)
-        self.status.set("源图已载入；现在可以缩放、移动和框选，尚未生成任何裁剪文件")
+        self.status.set(t("源图已载入；现在可以缩放、移动和框选，尚未生成任何裁剪文件"))
 
     def _fit_source_view(self) -> None:
         if self.source is None:
@@ -507,11 +508,11 @@ class BrushImageCropper:
                     paths = payload  # type: ignore[assignment]
                     self.export_running = False
                     self.export_button.configure(state=tk.NORMAL)
-                    self.status.set(f"导出完成：{len(paths)}张512×512 PNG，已保存到 art/data")
+                    self.status.set(t("导出完成：{len}张512×512 PNG，已保存到 art/data", len=len(paths)))
                     self._update_next_output_name()
                     messagebox.showinfo(
-                        "裁剪完成",
-                        f"已生成 {len(paths)} 张图片。\n\n统一输出目录：\n{Path(paths[0]).parent if paths else ''}",
+                        t("裁剪完成"),
+                        t("已生成 {len} 张图片。\n\n统一输出目录：\n{value}", len=len(paths), value=Path(paths[0]).parent if paths else ''),
                         parent=self.window,
                     )
                 elif kind == "error":
@@ -519,8 +520,8 @@ class BrushImageCropper:
                     self.export_running = False
                     if self.source is not None:
                         self.export_button.configure(state=tk.NORMAL)
-                    messagebox.showerror("图片裁剪器", str(payload), parent=self.window)
-                    self.status.set(f"操作失败：{payload}")
+                    messagebox.showerror(t("图片裁剪器"), str(payload), parent=self.window)
+                    self.status.set(t("操作失败：{payload}", payload=payload))
                     self._start_next_render()
         except queue.Empty:
             pass
@@ -614,7 +615,7 @@ class BrushImageCropper:
             guide_x,
             guide_y + 13,
             anchor="nw",
-            text="这一段 = 1格 = 512 px = 3 km",
+            text=t("这一段 = 1格 = 512 px = 3 km"),
             fill="#fff0a8",
             tags=("guide",),
         )
@@ -623,14 +624,13 @@ class BrushImageCropper:
         self.canvas.tag_raise("guide")
 
     def _update_selection_info(self) -> None:
-        text = f"已选择 {self.selection.columns}×{self.selection.rows}，共 {self.selection.count} 张"
+        text = t("已选择 {columns}×{rows}，共 {count} 张", columns=self.selection.columns, rows=self.selection.rows, count=self.selection.count)
         if self.source is not None:
             counts = selection_states(self.source, self.transform, self.selection)
             text += (
-                f"\n完整覆盖 {counts['full']}，部分超出 {counts['partial']}，"
-                f"完全在源图外 {counts['outside']}"
+                t("\n完整覆盖 {counts}，部分超出 {counts2}，完全在源图外 {counts3}", counts=counts['full'], counts2=counts['partial'], counts3=counts['outside'])
             )
-            text += f"\n当前一格覆盖源图约 {TILE_SIZE / self.transform.scale:.2f} 像素"
+            text += t("\n当前一格覆盖源图约 {value:.2f} 像素", value=TILE_SIZE / self.transform.scale)
         self.selection_info.set(text)
 
     def _update_next_output_name(self) -> None:
@@ -639,35 +639,35 @@ class BrushImageCropper:
         for entry in self.paths.data_root.iterdir():
             if entry.is_file() and entry.suffix.casefold() == ".png" and entry.stem.isdecimal():
                 highest = max(highest, int(entry.stem))
-        self.next_output_name.set(f"下一张：{highest + 1:03d}.png")
+        self.next_output_name.set(t("下一张：{value:03d}.png", value=highest + 1))
 
 
     def _export(self) -> None:
         if self.source is None:
-            messagebox.showwarning("图片裁剪器", "请先打开源图", parent=self.window)
+            messagebox.showwarning(t("图片裁剪器"), t("请先打开源图"), parent=self.window)
             return
         if self.export_running:
             return
         states = selection_states(self.source, self.transform, self.selection)
         if states["outside"]:
             messagebox.showerror(
-                "不能导出",
-                f"选区中有 {states['outside']} 格完全位于源图之外。请移动源图或缩小选区。",
+                t("不能导出"),
+                t("选区中有 {states} 格完全位于源图之外。请移动源图或缩小选区。", states=states['outside']),
                 parent=self.window,
             )
             return
         if states["partial"]:
             proceed = messagebox.askyesno(
-                "选区部分超出源图",
-                f"有 {states['partial']} 格只有部分区域被源图覆盖，超出部分会透明。继续导出吗？",
+                t("选区部分超出源图"),
+                t("有 {states} 格只有部分区域被源图覆盖，超出部分会透明。继续导出吗？", states=states['partial']),
                 parent=self.window,
             )
             if not proceed:
                 return
         if self.selection.count > 256:
             proceed = messagebox.askyesno(
-                "大量导出",
-                f"将生成 {self.selection.count} 张512×512 PNG，可能需要一些时间。继续吗？",
+                t("大量导出"),
+                t("将生成 {count} 张512×512 PNG，可能需要一些时间。继续吗？", count=self.selection.count),
                 parent=self.window,
             )
             if not proceed:
@@ -677,7 +677,7 @@ class BrushImageCropper:
         selection = self.selection
         self.export_running = True
         self.export_button.configure(state=tk.DISABLED)
-        self.status.set(f"正在导出 {selection.count} 张图片……")
+        self.status.set(t("正在导出 {count} 张图片……", count=selection.count))
 
         def worker() -> None:
             try:

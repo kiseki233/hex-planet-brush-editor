@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from .brush_lod import BrushLodPolicy
 from .zoom_tiers import ZoomTier, ZoomTierPolicy, visible_cells_estimate
+from .i18n import t
 
 
 @dataclass(frozen=True)
@@ -70,7 +71,7 @@ class ProductionLodController:
             description=(
                 f"{tier.name} {BrushLodPolicy.description(level)}"
                 if level < 4
-                else f"{tier.name} 远景地表"
+                else t("{name} 远景地表", name=tier.name)
             ),
             tier=tier,
         )

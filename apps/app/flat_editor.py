@@ -8,6 +8,7 @@ from tkinter import messagebox, ttk
 from .distant_lod import DistantLodCache, EMPTY_RGB, MISSING_RGB
 from .flat_map import FlatCellPolygon, IcosahedralNetLayout, render_net_surface_ppm
 from .software_globe import point_in_polygon
+from .i18n import t
 
 
 class ProductionFlatMapEditor:
@@ -16,9 +17,9 @@ class ProductionFlatMapEditor:
     def __init__(self, host) -> None:
         self.host = host
         if host.topology is None or host.layout is None or host.session is None:
-            raise RuntimeError("完整星球地图尚未准备完成")
+            raise RuntimeError(t("完整星球地图尚未准备完成"))
         self.window = tk.Toplevel(host.window)
-        self.window.title("完整星球 2D 展开编辑器 v1.3.1")
+        self.window.title(t("完整星球 2D 展开编辑器 v1.3.1"))
         self.window.geometry("1280x820")
         self.window.minsize(980, 650)
         self.window.protocol("WM_DELETE_WINDOW", self.close)
@@ -47,8 +48,8 @@ class ProductionFlatMapEditor:
         self.color_cache = DistantLodCache(host.paths.brush_root)
         self.last_dirty_signature: tuple[int, ...] = ()
         self.last_surface_signature: str | None = None
-        self.status = tk.StringVar(value="2D展开视图与球面视图共用同一张地图")
-        self.detail_info = tk.StringVar(value="滚轮缩放；右键拖动画布；任意缩放下按住左键连续绘制")
+        self.status = tk.StringVar(value=t("2D展开视图与球面视图共用同一张地图"))
+        self.detail_info = tk.StringVar(value=t("滚轮缩放；右键拖动画布；任意缩放下按住左键连续绘制"))
 
         self._build_ui()
         self.window.after(40, self._poll)
@@ -63,14 +64,14 @@ class ProductionFlatMapEditor:
         toolbar = ttk.Frame(root)
         toolbar.grid(row=0, column=0, sticky="ew", pady=(0, 6))
         toolbar.columnconfigure(4, weight=1)
-        ttk.Button(toolbar, text="显示完整展开图", command=self._fit_view).grid(row=0, column=0, padx=(0, 5))
-        ttk.Button(toolbar, text="保存星球地图", command=self.host.save).grid(row=0, column=1, padx=(0, 5))
-        ttk.Button(toolbar, text="回到球面窗口", command=self._raise_host).grid(row=0, column=2, padx=(0, 10))
+        ttk.Button(toolbar, text=t("显示完整展开图"), command=self._fit_view).grid(row=0, column=0, padx=(0, 5))
+        ttk.Button(toolbar, text=t("保存星球地图"), command=self.host.save).grid(row=0, column=1, padx=(0, 5))
+        ttk.Button(toolbar, text=t("回到球面窗口"), command=self._raise_host).grid(row=0, column=2, padx=(0, 10))
         ttk.Label(toolbar, textvariable=self.detail_info).grid(row=0, column=4, sticky="e")
 
         frame = ttk.LabelFrame(
             root,
-            text="二十面体展开图（接缝格子会重复显示，但都引用同一个 CellId）",
+            text=t("二十面体展开图（接缝格子会重复显示，但都引用同一个 CellId）"),
             padding=4,
         )
         frame.grid(row=1, column=0, sticky="nsew")
@@ -249,14 +250,13 @@ class ProductionFlatMapEditor:
             return
         if self.view_scale < 9.0:
             self.detail_info.set(
-                f"缩放 {self.view_scale:.2f}px/格；可直接绘制，"
-                "放大到约9px/格后才逐格显示（远景会实时更新）"
+                t("缩放 {view_scale:.2f}px/格；可直接绘制，放大到约9px/格后才逐格显示（远景会实时更新）", view_scale=self.view_scale)
             )
             self._draw_net_lines()
             return
         cells = self.net.visible_cells(topology, self._world_bounds(), maximum_cells=8000)
         if not cells:
-            self.detail_info.set("当前范围格子过多；仍可绘制，放大后才逐格显示")
+            self.detail_info.set(t("当前范围格子过多；仍可绘制，放大后才逐格显示"))
             self._draw_net_lines()
             return
 
@@ -296,7 +296,7 @@ class ProductionFlatMapEditor:
         self.canvas.tag_raise("detail")
         self.canvas.tag_raise("net")
         self.detail_info.set(
-            f"详细格子 {len(rendered):,}；左键连续绘制；当前笔刷直径 {self.host._brush_diameter_value()} 格"
+            t("详细格子 {len:,}；左键连续绘制；当前笔刷直径 {brush_diameter_value} 格", len=len(rendered), brush_diameter_value=self.host._brush_diameter_value())
         )
 
     def _track_cursor(self, event: tk.Event) -> None:
@@ -357,14 +357,14 @@ class ProductionFlatMapEditor:
         try:
             tool = self.host._stroke_tool_from_ui()
         except Exception as exc:
-            messagebox.showerror("2D展开编辑器", str(exc), parent=self.window)
+            messagebox.showerror(t("2D展开编辑器"), str(exc), parent=self.window)
             return
         self.host.local_stroke_id += 1
         self.stroke_id = -self.host.local_stroke_id
         self.stroke_tool = tool
         self.last_stroke_cell = cell_id
         self.host._queue_stroke_segment("flat", self.stroke_id, "start", cell_id, tool)
-        self.status.set(f"开始2D连续绘制；直径 {tool.diameter} 格")
+        self.status.set(t("开始2D连续绘制；直径 {diameter} 格", diameter=tool.diameter))
 
     def _paint_move(self, event: tk.Event) -> None:
         self._track_cursor(event)
@@ -385,7 +385,7 @@ class ProductionFlatMapEditor:
         self.stroke_tool = None
         self.last_stroke_cell = None
         self.host._queue_stroke_segment("flat", stroke_id, "end", -1, tool)
-        self.status.set("2D笔划已结束；按 Ctrl+S 保存")
+        self.status.set(t("2D笔划已结束；按 Ctrl+S 保存"))
 
     def _poll(self) -> None:
         try:
@@ -403,7 +403,7 @@ class ProductionFlatMapEditor:
                     self._start_render()
                 elif kind == "error":
                     self.render_running = False
-                    self.status.set(f"2D地表渲染失败：{payload}")
+                    self.status.set(t("2D地表渲染失败：{payload}", payload=payload))
                     self._start_render()
         except queue.Empty:
             pass

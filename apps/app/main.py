@@ -9,9 +9,11 @@ from tkinter import messagebox
 
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    from app.i18n import t
     from app.paths import ProjectPaths
     from app.production_editor import ProductionSphereEditor
 else:
+    from .i18n import t
     from .paths import ProjectPaths
     from .production_editor import ProductionSphereEditor
 
@@ -51,7 +53,7 @@ def main() -> int:
     except Exception as exc:
         logging.exception("Unhandled application error")
         try:
-            messagebox.showerror("错误", f"程序发生未处理错误：\n{exc}\n\n日志：{paths.log_root / 'app.log'}")
+            messagebox.showerror(t("错误"), t("程序发生未处理错误：\n{exc}\n\n日志：{value}", exc=exc, value=paths.log_root / 'app.log'))
         finally:
             root.destroy()
         return 1

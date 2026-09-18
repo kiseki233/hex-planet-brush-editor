@@ -8,20 +8,21 @@ from tkinter import messagebox, ttk
 
 from .paths import ProjectPaths
 from .topology import DualTopology, TopologyError, generate_dual_topology, write_topology_cache
+from .i18n import t
 
 
 class TopologyViewer:
     def __init__(self, parent: tk.Misc, paths: ProjectPaths) -> None:
         self.paths = paths
         self.window = tk.Toplevel(parent)
-        self.window.title("球面拓扑检查器 v1.3.1")
+        self.window.title(t("球面拓扑检查器 v1.3.1"))
         self.window.geometry("1120x780")
         self.window.minsize(820, 600)
 
         self.frequency = tk.StringVar(value="8")
-        self.status = tk.StringVar(value="选择频率后生成测试拓扑")
-        self.summary = tk.StringVar(value="尚未生成")
-        self.selected = tk.StringVar(value="未选择格子")
+        self.status = tk.StringVar(value=t("选择频率后生成测试拓扑"))
+        self.summary = tk.StringVar(value=t("尚未生成"))
+        self.selected = tk.StringVar(value=t("未选择格子"))
         self.topology: DualTopology | None = None
         self.yaw = -0.35
         self.pitch = 0.25
@@ -40,7 +41,7 @@ class TopologyViewer:
         root.columnconfigure(1, weight=0)
         root.rowconfigure(0, weight=1)
 
-        viewer_frame = ttk.LabelFrame(root, text="对偶球面格子预览", padding=6)
+        viewer_frame = ttk.LabelFrame(root, text=t("对偶球面格子预览"), padding=6)
         viewer_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
         viewer_frame.rowconfigure(0, weight=1)
         viewer_frame.columnconfigure(0, weight=1)
@@ -53,11 +54,11 @@ class TopologyViewer:
         self.canvas.bind("<Button-3>", self._select_cell)
         self.canvas.bind("<Configure>", lambda _event: self._redraw())
 
-        panel = ttk.LabelFrame(root, text="生成与验证", padding=10)
+        panel = ttk.LabelFrame(root, text=t("生成与验证"), padding=10)
         panel.grid(row=0, column=1, sticky="ns")
         panel.columnconfigure(0, weight=1)
 
-        ttk.Label(panel, text="测试细分频率").grid(row=0, column=0, sticky="w")
+        ttk.Label(panel, text=t("测试细分频率")).grid(row=0, column=0, sticky="w")
         self.frequency_combo = ttk.Combobox(
             panel,
             textvariable=self.frequency,
@@ -66,11 +67,11 @@ class TopologyViewer:
             width=20,
         )
         self.frequency_combo.grid(row=1, column=0, sticky="ew", pady=(2, 6))
-        self.generate_button = ttk.Button(panel, text="生成并写入拓扑缓存", command=self.generate)
+        self.generate_button = ttk.Button(panel, text=t("生成并写入拓扑缓存"), command=self.generate)
         self.generate_button.grid(row=2, column=0, sticky="ew")
 
         ttk.Separator(panel).grid(row=3, column=0, sticky="ew", pady=10)
-        ttk.Label(panel, text="验证结果").grid(row=4, column=0, sticky="w")
+        ttk.Label(panel, text=t("验证结果")).grid(row=4, column=0, sticky="w")
         ttk.Label(panel, textvariable=self.summary, wraplength=250, justify=tk.LEFT).grid(
             row=5, column=0, sticky="ew", pady=(3, 8)
         )
@@ -82,9 +83,9 @@ class TopologyViewer:
         ttk.Label(
             panel,
             text=(
-                "左键拖动：旋转球体\n"
+                t("左键拖动：旋转球体\n"
                 "右键点击：查看最近格子\n\n"
-                "浅色轮廓为普通六边形格子，橙色区域为拓扑中必须存在的 12 个五边形。"
+                "浅色轮廓为普通六边形格子，橙色区域为拓扑中必须存在的 12 个五边形。")
             ),
             wraplength=250,
             justify=tk.LEFT,
@@ -94,8 +95,8 @@ class TopologyViewer:
         ttk.Label(
             panel,
             text=(
-                "本检查器使用完整对偶拓扑数据，但界面只开放到 frequency=32，避免 Python 原型因一次生成过大数据而长时间占用内存。\n\n"
-                "正式目标 frequency=1004 的 CellId 公式和数量规则已经与此生成器共用，但本版本尚未声称完成千万格生产缓存。"
+                t("本检查器使用完整对偶拓扑数据，但界面只开放到 frequency=32，避免 Python 原型因一次生成过大数据而长时间占用内存。\n\n"
+                "正式目标 frequency=1004 的 CellId 公式和数量规则已经与此生成器共用，但本版本尚未声称完成千万格生产缓存。")
             ),
             wraplength=250,
             justify=tk.LEFT,
@@ -110,12 +111,12 @@ class TopologyViewer:
         try:
             frequency = int(self.frequency.get())
         except ValueError:
-            messagebox.showerror("错误", "细分频率无效", parent=self.window)
+            messagebox.showerror(t("错误"), t("细分频率无效"), parent=self.window)
             return
 
         self.generating = True
         self.generate_button.configure(state=tk.DISABLED)
-        self.status.set(f"正在生成 frequency={frequency} 的球面拓扑……")
+        self.status.set(t("正在生成 frequency={frequency} 的球面拓扑……", frequency=frequency))
         worker = threading.Thread(target=self._generate_worker, args=(frequency,), daemon=True)
         worker.start()
         self.window.after(50, self._poll_generation)
@@ -149,8 +150,8 @@ class TopologyViewer:
     def _generation_failed(self, error: Exception) -> None:
         self.generating = False
         self.generate_button.configure(state=tk.NORMAL)
-        self.status.set("拓扑生成失败")
-        messagebox.showerror("拓扑生成失败", str(error), parent=self.window)
+        self.status.set(t("拓扑生成失败"))
+        messagebox.showerror(t("拓扑生成失败"), str(error), parent=self.window)
 
     def _generation_finished(self, topology: DualTopology, directory) -> None:
         self.generating = False
@@ -160,19 +161,19 @@ class TopologyViewer:
         self.summary.set(
             "\n".join(
                 (
-                    f"Cell：{validation.cell_count:,}",
-                    f"三角面：{validation.triangle_count:,}",
-                    f"拓扑边：{validation.edge_count:,}",
-                    f"五边形：{validation.pentagon_count}",
-                    f"六边形：{validation.hexagon_count:,}",
-                    f"Euler：{validation.euler_characteristic}",
-                    f"邻接互反：{'通过' if validation.reciprocal_neighbor_links else '失败'}",
-                    f"稳定哈希：{validation.stable_hash[:16]}…",
+                    t("Cell：{cell_count:,}", cell_count=validation.cell_count),
+                    t("三角面：{triangle_count:,}", triangle_count=validation.triangle_count),
+                    t("拓扑边：{edge_count:,}", edge_count=validation.edge_count),
+                    t("五边形：{pentagon_count}", pentagon_count=validation.pentagon_count),
+                    t("六边形：{hexagon_count:,}", hexagon_count=validation.hexagon_count),
+                    t("Euler：{euler_characteristic}", euler_characteristic=validation.euler_characteristic),
+                    t("邻接互反：{value}", value=t('通过') if validation.reciprocal_neighbor_links else t('失败')),
+                    t("稳定哈希：{stable_hash}…", stable_hash=validation.stable_hash[:16]),
                 )
             )
         )
-        self.status.set(f"拓扑已生成并验证，缓存：{directory}")
-        self.selected.set("未选择格子")
+        self.status.set(t("拓扑已生成并验证，缓存：{directory}", directory=directory))
+        self.selected.set(t("未选择格子"))
         self._redraw()
 
     @staticmethod
@@ -198,7 +199,7 @@ class TopologyViewer:
             self.canvas.create_text(
                 width / 2,
                 height / 2,
-                text="正在准备球面拓扑……",
+                text=t("正在准备球面拓扑……"),
                 fill="#c8d0d8",
                 font=("TkDefaultFont", 13),
             )
@@ -282,17 +283,17 @@ class TopologyViewer:
         )
         distance = math.sqrt((nearest[0] - event.x) ** 2 + (nearest[1] - event.y) ** 2)
         if distance > 24:
-            self.selected.set("未选择格子")
+            self.selected.set(t("未选择格子"))
             return
         cell_id = nearest[2]
         is_pentagon = cell_id in set(topology.pentagon_ids)
         self.selected.set(
             "\n".join(
                 (
-                    f"CellId：{cell_id}",
-                    f"类型：{'隐藏五边形' if is_pentagon else '普通六边形'}",
-                    f"邻居数：{len(topology.neighbors[cell_id])}",
-                    "邻居：" + ", ".join(str(value) for value in topology.neighbors[cell_id]),
+                    t("CellId：{cell_id}", cell_id=cell_id),
+                    t("类型：{value}", value=t('隐藏五边形') if is_pentagon else t('普通六边形')),
+                    t("邻居数：{len}", len=len(topology.neighbors[cell_id])),
+                    t("邻居：") + ", ".join(str(value) for value in topology.neighbors[cell_id]),
                 )
             )
         )

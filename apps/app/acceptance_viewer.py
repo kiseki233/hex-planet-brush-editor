@@ -7,20 +7,21 @@ from tkinter import messagebox, ttk
 
 from .acceptance import AcceptanceReport, run_final_acceptance
 from .paths import ProjectPaths
+from .i18n import t
 
 
 class AcceptanceViewer:
     def __init__(self, parent: tk.Misc, paths: ProjectPaths) -> None:
         self.paths = paths
         self.window = tk.Toplevel(parent)
-        self.window.title("最终验收与 Windows 诊断 v1.3.1")
+        self.window.title(t("最终验收与 Windows 诊断 v1.3.1"))
         self.window.geometry("920x680")
         self.window.minsize(760, 520)
         self.results: queue.Queue[tuple[str, object]] = queue.Queue()
         self.running = False
         self.full_stress = tk.BooleanVar(value=True)
         self.wgl_probe = tk.BooleanVar(value=True)
-        self.status = tk.StringVar(value="尚未运行")
+        self.status = tk.StringVar(value=t("尚未运行"))
         self._build_ui()
         self.window.after(100, self._poll)
 
@@ -31,15 +32,15 @@ class AcceptanceViewer:
         controls.pack(fill=tk.X)
         ttk.Checkbutton(
             controls,
-            text="执行 256 张 LOD0 笔刷完整压力测试",
+            text=t("执行 256 张 LOD0 笔刷完整压力测试"),
             variable=self.full_stress,
         ).pack(side=tk.LEFT)
         ttk.Checkbutton(
             controls,
-            text="在 Windows 上执行隐藏 WGL/OpenGL 3.3 实机探测",
+            text=t("在 Windows 上执行隐藏 WGL/OpenGL 3.3 实机探测"),
             variable=self.wgl_probe,
         ).pack(side=tk.LEFT, padx=(16, 0))
-        self.run_button = ttk.Button(controls, text="开始最终验收", command=self.run)
+        self.run_button = ttk.Button(controls, text=t("开始最终验收"), command=self.run)
         self.run_button.pack(side=tk.RIGHT)
         self.text = tk.Text(root, wrap=tk.WORD, state=tk.DISABLED)
         self.text.pack(fill=tk.BOTH, expand=True, pady=(10, 8))
@@ -50,8 +51,8 @@ class AcceptanceViewer:
             return
         self.running = True
         self.run_button.configure(state=tk.DISABLED)
-        self.status.set("正在运行生产索引、Pack、LOD、无缝、纹理压力与 Windows 诊断……")
-        self._set_text("验收正在执行。结果会逐项区分通过、失败与需要 Windows 实机确认。\n")
+        self.status.set(t("正在运行生产索引、Pack、LOD、无缝、纹理压力与 Windows 诊断……"))
+        self._set_text(t("验收正在执行。结果会逐项区分通过、失败与需要 Windows 实机确认。\n"))
 
         full_texture_stress = bool(self.full_stress.get())
         run_wgl_probe = bool(self.wgl_probe.get())
@@ -79,8 +80,8 @@ class AcceptanceViewer:
                 else:
                     self.running = False
                     self.run_button.configure(state=tk.NORMAL)
-                    self.status.set(f"验收异常：{payload}")
-                    messagebox.showerror("最终验收", str(payload), parent=self.window)
+                    self.status.set(t("验收异常：{payload}", payload=payload))
+                    messagebox.showerror(t("最终验收"), str(payload), parent=self.window)
         except queue.Empty:
             pass
         if self.window.winfo_exists():
@@ -90,10 +91,10 @@ class AcceptanceViewer:
         self.running = False
         self.run_button.configure(state=tk.NORMAL)
         lines = [
-            f"版本：{report.version}",
-            f"通过：{report.passed_count}",
-            f"失败：{report.failed_count}",
-            f"需要 Windows 实机确认：{report.needs_windows_count}",
+            t("版本：{version}", version=report.version),
+            t("通过：{passed_count}", passed_count=report.passed_count),
+            t("失败：{failed_count}", failed_count=report.failed_count),
+            t("需要 Windows 实机确认：{needs_windows_count}", needs_windows_count=report.needs_windows_count),
             "",
         ]
         lines.extend(
@@ -102,8 +103,7 @@ class AcceptanceViewer:
         )
         self._set_text("\n\n".join(lines))
         self.status.set(
-            f"验收完成：通过 {report.passed_count}，失败 {report.failed_count}，"
-            f"需 Windows {report.needs_windows_count}。报告位于 {self.paths.log_root}"
+            t("验收完成：通过 {passed_count}，失败 {failed_count}，需 Windows {needs_windows_count}。报告位于 {log_root}", passed_count=report.passed_count, failed_count=report.failed_count, needs_windows_count=report.needs_windows_count, log_root=self.paths.log_root)
         )
 
     def _set_text(self, value: str) -> None:

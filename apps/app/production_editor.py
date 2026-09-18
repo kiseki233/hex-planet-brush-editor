@@ -89,6 +89,13 @@ from .software_globe import (
     point_in_polygon,
     rotate_point,
 )
+from .i18n import (
+    available_languages,
+    current_language,
+    language_display_name,
+    set_language,
+    t,
+)
 
 
 class ProductionSphereEditor:
@@ -114,9 +121,9 @@ class ProductionSphereEditor:
         self._auto_gpu_started = False
         self.window = parent if self.main_window else tk.Toplevel(parent)
         self.window.title(
-            "六边形星球地图笔刷编辑器 v1.3.1"
+            t("六边形星球地图笔刷编辑器 v1.3.1")
             if self.main_window
-            else "千万格生产球面 GPU 编辑器 v1.3.1"
+            else t("千万格生产球面 GPU 编辑器 v1.3.1")
         )
         self.window.geometry("1280x820" if self.main_window else "1160x760")
         self.window.minsize(1020, 680) if self.main_window else self.window.minsize(900, 620)
@@ -226,15 +233,15 @@ class ProductionSphereEditor:
         self.tool = tk.StringVar(value="paint")
         self.rotation = tk.IntVar(value=0)
         self.brush_diameter = tk.IntVar(value=1)
-        self.status = tk.StringVar(value="正在准备生产索引")
-        self.view_load_text = tk.StringVar(value="视图：等待地图")
+        self.status = tk.StringVar(value=t("正在准备生产索引"))
+        self.view_load_text = tk.StringVar(value=t("视图：等待地图"))
         self.view_load_value = tk.DoubleVar(value=0.0)
         self.summary = tk.StringVar(value="")
-        self.selected_path = tk.StringVar(value="未选择笔刷")
+        self.selected_path = tk.StringVar(value=t("未选择笔刷"))
         self.show_scale = tk.BooleanVar(value=True)
         self.scale_text = tk.StringVar(value="")
         self.tier_label = tk.StringVar(value="")
-        self.undo_label = tk.StringVar(value="撤销栈：空")
+        self.undo_label = tk.StringVar(value=t("撤销栈：空"))
         self.visible_cell_polygons: tuple[ProjectedCellPolygon, ...] = ()
         self.detail_cell_limit = 7000
         self._draw_job: str | None = None
@@ -252,7 +259,7 @@ class ProductionSphereEditor:
         root.columnconfigure(1, weight=1)
         root.rowconfigure(0, weight=1)
 
-        left = ttk.LabelFrame(root, text="笔刷库", padding=8)
+        left = ttk.LabelFrame(root, text=t("笔刷库"), padding=8)
         left.grid(row=0, column=0, sticky="ns", padx=(0, 8))
         left.rowconfigure(1, weight=1)
         left.columnconfigure(0, weight=1)
@@ -260,12 +267,12 @@ class ProductionSphereEditor:
         brush_buttons.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 6))
         brush_buttons.columnconfigure(0, weight=1)
         brush_buttons.columnconfigure(1, weight=1)
-        ttk.Button(brush_buttons, text="刷新笔刷库", command=self.refresh_brushes).grid(
+        ttk.Button(brush_buttons, text=t("刷新笔刷库"), command=self.refresh_brushes).grid(
             row=0, column=0, sticky="ew", padx=(0, 3)
         )
         ttk.Button(
             brush_buttons,
-            text="图片裁剪器（输出到 art/data）",
+            text=t("图片裁剪器（输出到 art/data）"),
             command=self.open_brush_cropper,
         ).grid(row=0, column=1, sticky="ew", padx=(3, 0))
         self.brush_tree = ttk.Treeview(left, show="tree", height=25)
@@ -280,7 +287,7 @@ class ProductionSphereEditor:
 
         center = ttk.LabelFrame(
             root,
-            text="整个星球地图（按住左键连续绘制，右键拖动旋转，滚轮缩放）",
+            text=t("整个星球地图（按住左键连续绘制，右键拖动旋转，滚轮缩放）"),
             padding=6,
         )
         center.grid(row=0, column=1, sticky="nsew")
@@ -367,7 +374,7 @@ class ProductionSphereEditor:
         if self.main_window:
             self.mini_frame = ttk.LabelFrame(
                 center,
-                text="宏观实时预览",
+                text=t("宏观实时预览"),
                 padding=4,
             )
             self.mini_canvas = tk.Canvas(
@@ -387,7 +394,7 @@ class ProductionSphereEditor:
             self.mini_message_item = self.mini_canvas.create_text(
                 self.MINI_GLOBE_DIAMETER / 2 + 4,
                 self.MINI_GLOBE_DIAMETER / 2 + 4,
-                text="正在载入宏观地表…",
+                text=t("正在载入宏观地表…"),
                 fill="#d0dde4",
             )
             self.mini_reticle_item = self.mini_canvas.create_oval(
@@ -421,7 +428,7 @@ class ProductionSphereEditor:
             )
             self._update_mini_reticle()
 
-        right = ttk.LabelFrame(root, text="星球地图与编辑工具", padding=10)
+        right = ttk.LabelFrame(root, text=t("星球地图与编辑工具"), padding=10)
         right.grid(row=0, column=2, sticky="ns", padx=(8, 0))
         right.columnconfigure(0, weight=1)
         row = 0
@@ -430,11 +437,11 @@ class ProductionSphereEditor:
         self.map_combo = None
         self.open_button = None
         if self.single_map_name is not None:
-            ttk.Label(right, text="地图").grid(row=row, column=0, sticky="w")
+            ttk.Label(right, text=t("地图")).grid(row=row, column=0, sticky="w")
             row += 1
             ttk.Label(
                 right,
-                text="整个星球（唯一地图）",
+                text=t("整个星球（唯一地图）"),
                 anchor=tk.CENTER,
                 relief=tk.GROOVE,
                 padding=(8, 7),
@@ -442,47 +449,47 @@ class ProductionSphereEditor:
             row += 1
             ttk.Label(
                 right,
-                text="程序启动后会自动创建或打开这一个完整星球，不再显示16×16局部测试地图。",
+                text=t("程序启动后会自动创建或打开这一个完整星球，不再显示16×16局部测试地图。"),
                 wraplength=255,
                 justify=tk.LEFT,
             ).grid(row=row, column=0, sticky="w")
             row += 1
         else:
-            ttk.Label(right, text="新地图名称").grid(row=row, column=0, sticky="w")
+            ttk.Label(right, text=t("新地图名称")).grid(row=row, column=0, sticky="w")
             row += 1
             ttk.Entry(right, textvariable=self.map_name, width=28).grid(
                 row=row, column=0, sticky="ew", pady=(2, 5)
             )
             row += 1
             self.create_button = ttk.Button(
-                right, text="创建完整 f1004 Pack 地图", command=self.create_map, state=tk.DISABLED
+                right, text=t("创建完整 f1004 Pack 地图"), command=self.create_map, state=tk.DISABLED
             )
             self.create_button.grid(row=row, column=0, sticky="ew")
             row += 1
-            ttk.Label(right, text="打开兼容地图").grid(row=row, column=0, sticky="w", pady=(9, 0))
+            ttk.Label(right, text=t("打开兼容地图")).grid(row=row, column=0, sticky="w", pady=(9, 0))
             row += 1
             self.map_combo = ttk.Combobox(right, textvariable=self.map_choice, state="readonly")
             self.map_combo.grid(row=row, column=0, sticky="ew", pady=(2, 5))
             row += 1
-            self.open_button = ttk.Button(right, text="打开地图", command=self.open_map, state=tk.DISABLED)
+            self.open_button = ttk.Button(right, text=t("打开地图"), command=self.open_map, state=tk.DISABLED)
             self.open_button.grid(row=row, column=0, sticky="ew")
             row += 1
 
         ttk.Separator(right).grid(row=row, column=0, sticky="ew", pady=10)
         row += 1
-        ttk.Label(right, text="编辑工具").grid(row=row, column=0, sticky="w")
+        ttk.Label(right, text=t("编辑工具")).grid(row=row, column=0, sticky="w")
         row += 1
         ttk.Radiobutton(
-            right, text="放置笔刷", variable=self.tool, value="paint", command=self._sync_tool
+            right, text=t("放置笔刷"), variable=self.tool, value="paint", command=self._sync_tool
         ).grid(row=row, column=0, sticky="w")
         row += 1
         ttk.Radiobutton(
-            right, text="清除格子", variable=self.tool, value="erase", command=self._sync_tool
+            right, text=t("清除格子"), variable=self.tool, value="erase", command=self._sync_tool
         ).grid(row=row, column=0, sticky="w")
         row += 1
         ttk.Radiobutton(
             right,
-            text="撤销笔刷（逐格回退一次改动）",
+            text=t("撤销笔刷（逐格回退一次改动）"),
             variable=self.tool,
             value="undo",
             command=self._sync_tool,
@@ -493,11 +500,11 @@ class ProductionSphereEditor:
         undo_row.columnconfigure(0, weight=1)
         undo_row.columnconfigure(1, weight=1)
         self.undo_button = ttk.Button(
-            undo_row, text="撤销 Ctrl+Z", command=self.undo, state=tk.DISABLED
+            undo_row, text=t("撤销 Ctrl+Z"), command=self.undo, state=tk.DISABLED
         )
         self.undo_button.grid(row=0, column=0, sticky="ew", padx=(0, 3))
         self.redo_button = ttk.Button(
-            undo_row, text="重做 Ctrl+Y", command=self.redo, state=tk.DISABLED
+            undo_row, text=t("重做 Ctrl+Y"), command=self.redo, state=tk.DISABLED
         )
         self.redo_button.grid(row=0, column=1, sticky="ew", padx=(3, 0))
         row += 1
@@ -505,7 +512,7 @@ class ProductionSphereEditor:
             row=row, column=0, sticky="w", pady=(3, 0)
         )
         row += 1
-        ttk.Label(right, text="笔刷直径（1～500格）").grid(
+        ttk.Label(right, text=t("笔刷直径（1～500格）")).grid(
             row=row, column=0, sticky="w", pady=(8, 2)
         )
         row += 1
@@ -526,7 +533,7 @@ class ProductionSphereEditor:
         row += 1
         ttk.Label(
             right,
-            text="组内图片逐格随机，旋转角度也逐格从六个方向随机。",
+            text=t("组内图片逐格随机，旋转角度也逐格从六个方向随机。"),
             wraplength=250,
             justify=tk.LEFT,
         ).grid(row=row, column=0, sticky="w", pady=(3, 0))
@@ -537,34 +544,34 @@ class ProductionSphereEditor:
         row += 1
         ttk.Checkbutton(
             right,
-            text="显示右下角比例尺",
+            text=t("显示右下角比例尺"),
             variable=self.show_scale,
             command=self._toggle_scale,
         ).grid(row=row, column=0, sticky="w", pady=(5, 0))
         row += 1
 
         self.gpu_button = ttk.Button(
-            right, text="打开/重启 GPU 主视口", command=self.open_gpu, state=tk.DISABLED
+            right, text=t("打开/重启 GPU 主视口"), command=self.open_gpu, state=tk.DISABLED
         )
         self.gpu_button.grid(row=row, column=0, sticky="ew", pady=(10, 0))
         row += 1
         self.flat_button = ttk.Button(
-            right, text="打开 2D 展开编辑器", command=self.open_flat_editor, state=tk.DISABLED
+            right, text=t("打开 2D 展开编辑器"), command=self.open_flat_editor, state=tk.DISABLED
         )
         self.flat_button.grid(row=row, column=0, sticky="ew", pady=(5, 0))
         row += 1
         self.aggregate_button = ttk.Button(
-            right, text="重建多层星球远景缓存", command=self.build_aggregate_cache, state=tk.DISABLED
+            right, text=t("重建多层星球远景缓存"), command=self.build_aggregate_cache, state=tk.DISABLED
         )
         self.aggregate_button.grid(row=row, column=0, sticky="ew", pady=(5, 0))
         row += 1
-        self.save_button = ttk.Button(right, text="保存星球地图", command=self.save, state=tk.DISABLED)
+        self.save_button = ttk.Button(right, text=t("保存星球地图"), command=self.save, state=tk.DISABLED)
         self.save_button.grid(row=row, column=0, sticky="ew", pady=(5, 0))
         row += 1
         if self.main_window:
             ttk.Button(
                 right,
-                text="运行最终验收与 Windows 诊断",
+                text=t("运行最终验收与 Windows 诊断"),
                 command=lambda: AcceptanceViewer(self.window, self.paths),
             ).grid(row=row, column=0, sticky="ew", pady=(5, 0))
             row += 1
@@ -578,9 +585,9 @@ class ProductionSphereEditor:
         ttk.Label(
             right,
             text=(
-                "球面视图和2D展开视图表示同一张完整地图。球面中右键拖动旋转，滚轮缩放。"
+                t("球面视图和2D展开视图表示同一张完整地图。球面中右键拖动旋转，滚轮缩放。"
                 "左侧选择分类文件夹作为随机笔刷组，按住左键连续拖画。"
-                "每格随机抽取组内图片与六方向旋转，新笔划会完整覆盖旧状态。"
+                "每格随机抽取组内图片与六方向旋转，新笔划会完整覆盖旧状态。")
             ),
             wraplength=260,
             justify=tk.LEFT,
@@ -602,8 +609,39 @@ class ProductionSphereEditor:
             anchor=tk.E,
             width=31,
         ).pack(side=tk.RIGHT)
+        self.language_box = ttk.Combobox(
+            status_bar,
+            state="readonly",
+            width=8,
+            values=[language_display_name(code) for code in available_languages()],
+        )
+        self.language_box.set(language_display_name(current_language()))
+        self.language_box.bind("<<ComboboxSelected>>", self._on_language_selected)
+        self.language_box.pack(side=tk.LEFT, padx=(0, 8))
         ttk.Label(status_bar, textvariable=self.status, anchor=tk.W).pack(
             fill=tk.X, side=tk.LEFT, expand=True
+        )
+
+    def _on_language_selected(self, event: "tk.Event") -> None:
+        """Persist the chosen language.
+
+        The window is built once, with every label already resolved, so the new
+        language is applied on the next launch rather than by rebuilding a
+        window that may hold an unsaved stroke.
+        """
+        codes = available_languages()
+        names = [language_display_name(code) for code in codes]
+        try:
+            chosen = codes[names.index(self.language_box.get())]
+        except ValueError:
+            return
+        if chosen == current_language():
+            return
+        set_language(chosen)
+        messagebox.showinfo(
+            t("语言"),
+            t("语言已切换为 {name}，重启程序后生效。", name=language_display_name(chosen)),
+            parent=self.window,
         )
 
     def open_brush_cropper(self) -> None:
@@ -611,26 +649,26 @@ class ProductionSphereEditor:
 
     def open_flat_editor(self) -> None:
         if self.topology is None or self.layout is None or self.session is None:
-            self.status.set("请等待完整星球地图准备完成")
+            self.status.set(t("请等待完整星球地图准备完成"))
             return
         try:
             editor = ProductionFlatMapEditor(self)
         except Exception as exc:
-            messagebox.showerror("2D展开编辑器", str(exc), parent=self.window)
+            messagebox.showerror(t("2D展开编辑器"), str(exc), parent=self.window)
             return
         self._flat_editors.add(editor)
-        self.status.set("已打开2D二十面体展开编辑器；它与球面视图共用同一张地图")
+        self.status.set(t("已打开2D二十面体展开编辑器；它与球面视图共用同一张地图"))
 
     def refresh_brushes(self) -> None:
         if hasattr(self, "stroke_busy_count") and self._strokes_busy():
-            self.status.set("请先松开鼠标并等待当前连续笔划完成，再刷新笔刷库")
+            self.status.set(t("请先松开鼠标并等待当前连续笔划完成，再刷新笔刷库"))
             return
         if hasattr(self, "brush_prewarm_generation"):
             self.brush_prewarm_generation += 1
         try:
             self.scan_result = self.catalog.scan()
         except Exception as exc:
-            messagebox.showerror("笔刷库", str(exc), parent=self.window)
+            messagebox.showerror(t("笔刷库"), str(exc), parent=self.window)
             return
         self.records_by_uid = {record.uid: record for record in self.scan_result.records}
         self.brush_tree.delete(*self.brush_tree.get_children())
@@ -655,7 +693,7 @@ class ProductionSphereEditor:
                 key = ""
                 if key not in categories:
                     categories[key] = self.brush_tree.insert(
-                        "", tk.END, text="未分类", open=False, tags=("group:",)
+                        "", tk.END, text=t("未分类"), open=False, tags=("group:",)
                     )
                 parent = categories[key]
             self.brush_tree.insert(
@@ -686,9 +724,9 @@ class ProductionSphereEditor:
             if not selected_records:
                 self.selected_brush_group = None
                 self.selected_brush_uid = None
-                self.selected_path.set("未选择笔刷组")
+                self.selected_path.set(t("未选择笔刷组"))
         self.status.set(
-            f"笔刷扫描：有效 {self.scan_result.active_count}，缺失 {self.scan_result.missing_count}"
+            t("笔刷扫描：有效 {active_count}，缺失 {missing_count}", active_count=self.scan_result.active_count, missing_count=self.scan_result.missing_count)
         )
 
     def _brush_selected(self, _event: tk.Event) -> None:
@@ -705,12 +743,12 @@ class ProductionSphereEditor:
             return
         records = records_for_group(self.records_by_uid, group_tag)
         if not records:
-            self.status.set("该分类中没有有效的512×512 PNG笔刷")
+            self.status.set(t("该分类中没有有效的512×512 PNG笔刷"))
             return
         self.selected_brush_group = group_tag
         self.selected_brush_uid = records[0].uid
-        label = group_tag or "未分类"
-        self.selected_path.set(f"笔刷组：{label}（{len(records)}张图片）")
+        label = group_tag or t("未分类")
+        self.selected_path.set(t("笔刷组：{label}（{len}张图片）", label=label, len=len(records)))
         self.tool.set("paint")
         self._sync_tool()
         self._prewarm_brush_group(records)
@@ -724,7 +762,7 @@ class ProductionSphereEditor:
         records = tuple(records)
         cache = BrushLodCache(self.paths.brush_root)
         self.status.set(
-            f"正在后台预热笔刷组：{len(records)} 张 LOD{level} 纹理……"
+            t("正在后台预热笔刷组：{len} 张 LOD{level} 纹理……", len=len(records), level=level)
         )
 
         def worker() -> None:
@@ -800,8 +838,7 @@ class ProductionSphereEditor:
             self._sync_tool()
         if tier.index != previous.index:
             self.status.set(
-                f"缩放档位切换为 {tier.name}（{tier.description}）；"
-                f"笔刷直径范围 {tier.min_diameter}～{tier.max_diameter} 格"
+                t("缩放档位切换为 {name}（{description}）；笔刷直径范围 {min_diameter}～{max_diameter} 格", name=tier.name, description=tier.description, min_diameter=tier.min_diameter, max_diameter=tier.max_diameter)
             )
             if self.selected_brush_group is not None:
                 records = records_for_group(
@@ -818,10 +855,7 @@ class ProductionSphereEditor:
         cells = visible_cells_estimate(self.zoom, width, height)
         pixels = cell_pixels(self.zoom, width, height, frequency=self.FREQUENCY)
         self.tier_label.set(
-            f"档位 {tier.name}：{tier.description}\n"
-            f"缩放 {self.zoom:.2f}×｜可见约 {cells:,} 格｜{pixels:.2f} px/格\n"
-            f"该档笔刷 {tier.min_diameter}～{tier.max_diameter} 格，"
-            f"反馈粒度约 {tier.feedback_cells} 格"
+            t("档位 {name}：{description}\n缩放 {zoom:.2f}×｜可见约 {cells:,} 格｜{pixels:.2f} px/格\n该档笔刷 {min_diameter}～{max_diameter} 格，反馈粒度约 {feedback_cells} 格", name=tier.name, description=tier.description, zoom=self.zoom, cells=cells, pixels=pixels, min_diameter=tier.min_diameter, max_diameter=tier.max_diameter, feedback_cells=tier.feedback_cells)
         )
 
     def _toggle_scale(self) -> None:
@@ -891,12 +925,11 @@ class ProductionSphereEditor:
             state=tk.NORMAL if history.can_redo else tk.DISABLED
         )
         if not history.can_undo and not history.can_redo:
-            self.undo_label.set("撤销栈：空")
+            self.undo_label.set(t("撤销栈：空"))
             return
         megabytes = history.byte_size / (1024.0 * 1024.0)
         self.undo_label.set(
-            f"撤销栈：{history.undo_depth} 笔可撤销，"
-            f"{history.redo_depth} 笔可重做（{megabytes:.1f} MB）"
+            t("撤销栈：{undo_depth} 笔可撤销，{redo_depth} 笔可重做（{megabytes:.1f} MB）", undo_depth=history.undo_depth, redo_depth=history.redo_depth, megabytes=megabytes)
         )
 
     def _canvas_configure(self, event: tk.Event) -> None:
@@ -932,7 +965,7 @@ class ProductionSphereEditor:
         self.embedded_gpu_starting = True
         width = max(1, self.canvas.winfo_width())
         height = max(1, self.canvas.winfo_height())
-        self.status.set("正在启动嵌入式 GPU 主视口……")
+        self.status.set(t("正在启动嵌入式 GPU 主视口……"))
 
         def worker() -> None:
             try:
@@ -950,7 +983,7 @@ class ProductionSphereEditor:
         if self.worker_running:
             return
         self.worker_running = True
-        self.status.set("正在生成或读取 f1004 生产布局与可见性索引……")
+        self.status.set(t("正在生成或读取 f1004 生产布局与可见性索引……"))
         self.background_executor.submit(self._prepare_worker)
 
     def _prepare_worker(self) -> None:
@@ -975,7 +1008,7 @@ class ProductionSphereEditor:
         if self.single_map_name is None or self.layout is None or self.worker_running:
             return
         self.worker_running = True
-        self.status.set("正在创建或打开唯一的完整星球地图……")
+        self.status.set(t("正在创建或打开唯一的完整星球地图……"))
         map_name = self.single_map_name
 
         def worker() -> None:
@@ -1013,10 +1046,10 @@ class ProductionSphereEditor:
             return
         name = self.map_name.get().strip()
         if not name:
-            messagebox.showerror("地图", "地图名称不能为空", parent=self.window)
+            messagebox.showerror(t("地图"), t("地图名称不能为空"), parent=self.window)
             return
         self.worker_running = True
-        self.status.set("正在创建完整 f1004 Pack 地图……")
+        self.status.set(t("正在创建完整 f1004 Pack 地图……"))
 
         def worker() -> None:
             try:
@@ -1036,7 +1069,7 @@ class ProductionSphereEditor:
         try:
             session = self.store.open(name, self.layout)
         except Exception as exc:
-            messagebox.showerror("打开地图", str(exc), parent=self.window)
+            messagebox.showerror(t("打开地图"), str(exc), parent=self.window)
             return
         self._set_session(session)
 
@@ -1061,7 +1094,7 @@ class ProductionSphereEditor:
             self.mini_canvas.itemconfigure(self.mini_image_item, image="")
             self.mini_canvas.itemconfigure(
                 self.mini_message_item,
-                text="正在载入宏观地表…",
+                text=t("正在载入宏观地表…"),
                 state=tk.NORMAL,
             )
         with self.surface_live_lock:
@@ -1101,7 +1134,7 @@ class ProductionSphereEditor:
         self.gpu_button.configure(state=tk.NORMAL)
         self.aggregate_button.configure(state=tk.NORMAL)
         self.flat_button.configure(state=tk.NORMAL)
-        self.status.set("完整星球地图已就绪" if self.single_map_name else f"已打开生产地图：{session.name}")
+        self.status.set(t("完整星球地图已就绪") if self.single_map_name else t("已打开生产地图：{name}", name=session.name))
         self._request_surface_build()
         self._draw_overview()
         if self.auto_open_gpu and not self._auto_gpu_started and native_gpu_supported():
@@ -1110,12 +1143,12 @@ class ProductionSphereEditor:
 
     def open_gpu(self) -> None:
         if self.controller is None or self.session is None:
-            self.status.set("请先创建或打开生产地图")
+            self.status.set(t("请先创建或打开生产地图"))
             return
         if not native_gpu_supported():
             messagebox.showinfo(
-                "GPU 编辑器",
-                "原生 WGL/OpenGL 主视口只在 Windows 上启用；当前平台继续使用独立进程软件视口。",
+                t("GPU 编辑器"),
+                t("原生 WGL/OpenGL 主视口只在 Windows 上启用；当前平台继续使用独立进程软件视口。"),
                 parent=self.window,
             )
             return
@@ -1125,7 +1158,7 @@ class ProductionSphereEditor:
                 self.bridge.close()
                 self.bridge = None
             if self.surface_texture is None:
-                self.status.set("缩略地表尚未准备完成，完成后会自动启动 GPU 主视口")
+                self.status.set(t("缩略地表尚未准备完成，完成后会自动启动 GPU 主视口"))
                 self._request_surface_build()
                 return
             self._maybe_start_embedded_gpu()
@@ -1134,7 +1167,7 @@ class ProductionSphereEditor:
             return
         self.worker_running = True
         self.gpu_button.configure(state=tk.DISABLED)
-        self.status.set("正在读取初始可见区块并生成 GPU 实例流……")
+        self.status.set(t("正在读取初始可见区块并生成 GPU 实例流……"))
 
         def worker() -> None:
             try:
@@ -1180,10 +1213,10 @@ class ProductionSphereEditor:
         if not launch.started:
             self.bridge.close()
             self.bridge = None
-            messagebox.showerror("GPU 编辑器", launch.reason, parent=self.window)
+            messagebox.showerror(t("GPU 编辑器"), launch.reason, parent=self.window)
             return
         self.status.set(
-            f"生产 GPU 编辑器已启动：区块 {len(frame.update.active_chunk_ids):,}，实例 {batch.instance_count:,}"
+            t("生产 GPU 编辑器已启动：区块 {len:,}，实例 {instance_count:,}", len=len(frame.update.active_chunk_ids), instance_count=batch.instance_count)
         )
 
     def _launch_embedded_gpu(self, frame, batch, width: int, height: int) -> None:
@@ -1220,7 +1253,7 @@ class ProductionSphereEditor:
         if not launch.started or launch.viewport is None:
             self.bridge.close()
             self.bridge = None
-            self.status.set(f"嵌入式 GPU 主视口启动失败，继续使用软件视口：{launch.reason}")
+            self.status.set(t("嵌入式 GPU 主视口启动失败，继续使用软件视口：{reason}", reason=launch.reason))
             self._request_draw(0)
             return
         self.embedded_gpu_viewport = launch.viewport
@@ -1232,10 +1265,9 @@ class ProductionSphereEditor:
         self.canvas.itemconfigure(self.surface_item, state=tk.HIDDEN)
         self.canvas.itemconfigure(self.surface_outline_item, state=tk.HIDDEN)
         self.canvas.itemconfigure(self.overlay_item, state=tk.HIDDEN)
-        self.gpu_button.configure(text="GPU 主视口已启用", state=tk.DISABLED)
+        self.gpu_button.configure(text=t("GPU 主视口已启用"), state=tk.DISABLED)
         self.status.set(
-            f"GPU 主视口已启用：区块 {len(frame.update.active_chunk_ids):,}，"
-            f"实例 {batch.instance_count:,}"
+            t("GPU 主视口已启用：区块 {len:,}，实例 {instance_count:,}", len=len(frame.update.active_chunk_ids), instance_count=batch.instance_count)
         )
         if self.mini_frame is not None:
             self.mini_frame.lift()
@@ -1274,7 +1306,7 @@ class ProductionSphereEditor:
         self.view_load_progress.stop()
         self.view_load_progress.configure(mode="indeterminate")
         self.view_load_progress.start(12)
-        self.view_load_text.set("视图：正在计算可见区块…")
+        self.view_load_text.set(t("视图：正在计算可见区块…"))
 
     def _update_view_loading(self, patch: GpuStreamPatch | GpuBatchResetPatch) -> None:
         self.view_load_progress.stop()
@@ -1284,18 +1316,18 @@ class ProductionSphereEditor:
         remaining = max(0, int(patch.remaining_chunk_count))
         if total <= 0:
             self.view_load_value.set(100.0)
-            self.view_load_text.set("视图：远景地表已就绪")
+            self.view_load_text.set(t("视图：远景地表已就绪"))
             return
         percent = max(0, min(100, round(loaded * 100 / total)))
         self.view_load_value.set(float(percent))
         if patch.has_more or remaining > 0 or loaded < total:
-            suffix = f"，待处理 {remaining:,}" if remaining else ""
+            suffix = t("，待处理 {remaining:,}", remaining=remaining) if remaining else ""
             self.view_load_text.set(
-                f"视图：加载 {loaded:,}/{total:,}（{percent}%）{suffix}"
+                t("视图：加载 {loaded:,}/{total:,}（{percent}%）{suffix}", loaded=loaded, total=total, percent=percent, suffix=suffix)
             )
         else:
             self.view_load_text.set(
-                f"视图：已就绪 {loaded:,}/{total:,}（100%）"
+                t("视图：已就绪 {loaded:,}/{total:,}（100%）", loaded=loaded, total=total)
             )
 
     def _poll_bridge(self) -> None:
@@ -1307,17 +1339,17 @@ class ProductionSphereEditor:
             self.view_load_progress.stop()
             self.view_load_progress.configure(mode="determinate")
             self.view_load_value.set(0.0)
-            self.view_load_text.set("视图：GPU 已关闭")
+            self.view_load_text.set(t("视图：GPU 已关闭"))
             if self.embedded_gpu_active:
                 self.embedded_gpu_active = False
                 self.embedded_gpu_viewport = None
-                self.gpu_button.configure(text="打开/重启 GPU 主视口", state=tk.NORMAL)
-                self.status.set("GPU 主视口已关闭，已回退到软件视口")
+                self.gpu_button.configure(text=t("打开/重启 GPU 主视口"), state=tk.NORMAL)
+                self.status.set(t("GPU 主视口已关闭，已回退到软件视口"))
                 if self.surface_texture is not None:
                     try:
                         self.surface_renderer.set_texture(self.surface_texture)
                     except Exception as exc:
-                        self.status.set(f"GPU 主视口已关闭；软件后备视口启动失败：{exc}")
+                        self.status.set(t("GPU 主视口已关闭；软件后备视口启动失败：{exc}", exc=exc))
                 self._request_draw(0)
             return
         bridge_state = bridge.tool_state()
@@ -1432,7 +1464,7 @@ class ProductionSphereEditor:
         ):
             return
         self.gpu_resync_running = True
-        self.status.set("检测到 GPU 数据流不同步，正在自动重建完整视图……")
+        self.status.set(t("检测到 GPU 数据流不同步，正在自动重建完整视图……"))
         logging.warning(
             "GPU full resync requested id=%s reason=%s",
             request.request_id,
@@ -1450,7 +1482,7 @@ class ProductionSphereEditor:
                         request_id=request.request_id,
                         batch=batch,
                         message=(
-                            f"GPU 数据流已自动恢复：{batch.instance_count:,} 个实例"
+                            t("GPU 数据流已自动恢复：{instance_count:,} 个实例", instance_count=batch.instance_count)
                         ),
                         editable=True,
                     )
@@ -1540,7 +1572,7 @@ class ProductionSphereEditor:
         if state.tool in {"erase", "undo"}:
             return BrushStrokeTool(state.tool, state.brush_diameter).validated()
         if state.brush_uid is None:
-            raise SphereMapError("请先在左侧选择一个笔刷分类文件夹")
+            raise SphereMapError(t("请先在左侧选择一个笔刷分类文件夹"))
         records = records_for_group(self.records_by_uid, state.brush_group)
         if not records and state.brush_uid is not None:
             record = self.records_by_uid.get(state.brush_uid)
@@ -1553,16 +1585,16 @@ class ProductionSphereEditor:
         if self.tool.get() in {"erase", "undo"}:
             return BrushStrokeTool(self.tool.get(), diameter).validated()
         if self.selected_brush_group is None:
-            raise SphereMapError("请先在左侧选择一个笔刷分类文件夹")
+            raise SphereMapError(t("请先在左侧选择一个笔刷分类文件夹"))
         records = records_for_group(self.records_by_uid, self.selected_brush_group)
         return BrushStrokeTool("paint", diameter, records).validated()
 
     @staticmethod
     def _undo_label(tool: BrushStrokeTool) -> str:
-        action = {"paint": "绘制", "erase": "清除", "undo": "撤销笔刷"}.get(
+        action = {"paint": t("绘制"), "erase": t("清除"), "undo": t("撤销笔刷")}.get(
             tool.tool, tool.tool
         )
-        return f"{action} 直径{tool.diameter}格"
+        return t("{action} 直径{diameter}格", action=action, diameter=tool.diameter)
 
     def _undo_brush_values(self, session: SphereMapSession, cell_ids) -> dict[int, int]:
         """Previous value for each cell under the undo brush.
@@ -1592,11 +1624,11 @@ class ProductionSphereEditor:
         session = self.session
         controller = self.controller
         layout = self.layout
-        name = "重做" if redo else "撤销"
+        name = t("重做") if redo else t("撤销")
         if session is None or controller is None or layout is None:
             return
         if self._strokes_busy():
-            self.status.set(f"正在等待连续笔划完成，请稍后再{name}")
+            self.status.set(t("正在等待连续笔划完成，请稍后再{name}", name=name))
             return
         bridge = self.bridge
         try:
@@ -1607,7 +1639,7 @@ class ProductionSphereEditor:
                     else self.undo_history.undo(session, self.store, layout)
                 )
                 if result is None:
-                    self.status.set(f"没有可{name}的笔划")
+                    self.status.set(t("没有可{name}的笔划", name=name))
                     self._refresh_undo_label()
                     return
                 patches, uploads, released_layers = controller.patch_visible_cells(
@@ -1633,7 +1665,7 @@ class ProductionSphereEditor:
                                 changed=tuple(patches),
                                 texture_uploads=tuple(uploads),
                                 message=(
-                                    f"{name}：{len(result.changed_cell_ids):,} 格"
+                                    t("{name}：{len:,} 格", name=name, len=len(result.changed_cell_ids))
                                 ),
                                 lod_level=controller.lod_level,
                                 padded_size=controller.stream.lod_cache.padded_size(
@@ -1648,8 +1680,7 @@ class ProductionSphereEditor:
             messagebox.showerror(name, str(exc), parent=self.window)
             return
         self.status.set(
-            f"{name}「{result.label}」：{len(result.changed_cell_ids):,} 格，"
-            f"{result.chunk_count} 个区块；远景纹理正在局部更新"
+            t("{name}「{label}」：{len:,} 格，{chunk_count} 个区块；远景纹理正在局部更新", name=name, label=result.label, len=len(result.changed_cell_ids), chunk_count=result.chunk_count)
         )
         self._queue_surface_live_cells(result.changed_cell_ids)
         self._refresh_undo_label()
@@ -1670,16 +1701,16 @@ class ProductionSphereEditor:
         planner = self.stroke_planner
         controller = self.controller
         if session is None or planner is None or controller is None:
-            raise SphereMapError("完整星球地图尚未准备完成")
+            raise SphereMapError(t("完整星球地图尚未准备完成"))
         if phase == "end":
             state = self.active_strokes.pop(int(stroke_id), None)
             with controller.lock:
                 self.undo_history.commit(0 if state is None else state.touched_cell_count)
             return (0 if state is None else state.touched_cell_count, 0)
         if phase not in {"point", "start", "move"}:
-            raise SphereMapError(f"不支持的笔划阶段：{phase}")
+            raise SphereMapError(t("不支持的笔划阶段：{phase}", phase=phase))
         if cell_id < 0 or cell_id >= planner.topology.cell_count:
-            raise SphereMapError(f"CellId超出范围：{cell_id}")
+            raise SphereMapError(t("CellId超出范围：{cell_id}", cell_id=cell_id))
 
         key = int(stroke_id)
         state = self.active_strokes.get(key)
@@ -1725,8 +1756,7 @@ class ProductionSphereEditor:
                         changed=tuple(patches),
                         texture_uploads=tuple(uploads),
                         message=(
-                            f"连续笔划更新 {len(changed_cell_ids):,} 格；"
-                            f"直径 {state.tool.diameter} 格"
+                            t("连续笔划更新 {len:,} 格；直径 {diameter} 格", len=len(changed_cell_ids), diameter=state.tool.diameter)
                         ),
                         lod_level=controller.lod_level,
                         padded_size=controller.stream.lod_cache.padded_size(
@@ -1742,13 +1772,11 @@ class ProductionSphereEditor:
                     far_view = controller.lod_controller.level >= 4
                     if changed_cell_ids and far_view:
                         note = (
-                            f"远景笔划已写入 {len(changed_cell_ids):,} 格；"
-                            "正在局部更新 L5 地表纹理"
+                            t("远景笔划已写入 {len:,} 格；正在局部更新 L5 地表纹理", len=len(changed_cell_ids))
                         )
                     else:
                         note = (
-                            f"笔划经过 {len(plan.affected_cell_ids):,} 格；"
-                            "当前格子不在GPU实例流或状态未变化"
+                            t("笔划经过 {len:,} 格；当前格子不在GPU实例流或状态未变化", len=len(plan.affected_cell_ids))
                         )
                     gpu_patch = GpuStatusPatch(request_id, True, note)
                 # This queue insertion happens before releasing controller.lock,
@@ -1785,7 +1813,7 @@ class ProductionSphereEditor:
                 request.request_id,
             )
         except Exception as exc:
-            bridge.push_patch(GpuStatusPatch(request.request_id, False, f"编辑失败：{exc}"))
+            bridge.push_patch(GpuStatusPatch(request.request_id, False, t("编辑失败：{exc}", exc=exc)))
 
     def _handle_save(self, request: GpuSaveRequest) -> None:
         bridge = self.bridge
@@ -1794,7 +1822,7 @@ class ProductionSphereEditor:
         if self._strokes_busy():
             self.pending_gpu_saves.append(request)
             bridge.push_patch(
-                GpuStatusPatch(request.request_id, True, "正在等待连续笔划处理完成后保存")
+                GpuStatusPatch(request.request_id, True, t("正在等待连续笔划处理完成后保存"))
             )
             return
         self._execute_gpu_save(request)
@@ -1806,7 +1834,7 @@ class ProductionSphereEditor:
         if self.save_running:
             self.pending_gpu_saves.append(request)
             bridge.push_patch(
-                GpuStatusPatch(request.request_id, True, "已有后台保存任务，已排队")
+                GpuStatusPatch(request.request_id, True, t("已有后台保存任务，已排队"))
             )
             return
         self._start_save_worker(request)
@@ -1816,7 +1844,7 @@ class ProductionSphereEditor:
             return
         self.worker_running = True
         self.aggregate_button.configure(state=tk.DISABLED)
-        self.status.set("正在流式构建多层聚合远景缓存……")
+        self.status.set(t("正在流式构建多层聚合远景缓存……"))
 
         def worker() -> None:
             try:
@@ -1832,7 +1860,7 @@ class ProductionSphereEditor:
             return
         if self._strokes_busy():
             self.pending_local_save = True
-            self.status.set("正在等待连续笔划处理完成，随后自动保存")
+            self.status.set(t("正在等待连续笔划处理完成，随后自动保存"))
             return
         self._execute_local_save()
 
@@ -1841,7 +1869,7 @@ class ProductionSphereEditor:
             return
         if self.save_running:
             self.pending_local_save = True
-            self.status.set("已有后台保存任务，本次保存已排队")
+            self.status.set(t("已有后台保存任务，本次保存已排队"))
             return
         self._start_save_worker(None)
 
@@ -1851,7 +1879,7 @@ class ProductionSphereEditor:
             return
         dirty = len(controller.session.dirty_chunks)
         if dirty == 0 and not controller.session.brush_table_dirty:
-            message = "当前没有未保存修改"
+            message = t("当前没有未保存修改")
             self.status.set(message)
             if request is not None and self.bridge is not None and not self.bridge.closed:
                 self.bridge.push_patch(
@@ -1865,7 +1893,7 @@ class ProductionSphereEditor:
         self.save_button.configure(state=tk.DISABLED)
         self.aggregate_button.configure(state=tk.DISABLED)
         message = (
-            f"保存已提交：等待当前视图计算结束（{dirty:,} 个脏区块）……"
+            t("保存已提交：等待当前视图计算结束（{dirty:,} 个脏区块）……", dirty=dirty)
         )
         self.status.set(message)
         logging.info("Save queued dirty_chunks=%s", dirty)
@@ -2015,7 +2043,7 @@ class ProductionSphereEditor:
             chunks_per_pack=session.chunks_per_pack,
         )
         records = dict(self.records_by_uid)
-        self.status.set("正在生成缩小后的星球地表缓存……")
+        self.status.set(t("正在生成缩小后的星球地表缓存……"))
 
         def worker() -> None:
             try:
@@ -2177,7 +2205,7 @@ class ProductionSphereEditor:
                 )
                 return
             except Exception as exc:
-                self.status.set(f"独立渲染进程不可用，已回退到线程：{exc}")
+                self.status.set(t("独立渲染进程不可用，已回退到线程：{exc}", exc=exc))
         if self.surface_render_running:
             return
         self.pending_surface_render = None
@@ -2302,7 +2330,7 @@ class ProductionSphereEditor:
             self.canvas.coords(self.center_message_item, cx, cy)
             self.canvas.itemconfigure(
                 self.center_message_item,
-                text="正在准备完整星球……",
+                text=t("正在准备完整星球……"),
                 state=tk.NORMAL,
             )
             self.canvas.tag_raise(self.center_message_item)
@@ -2311,20 +2339,18 @@ class ProductionSphereEditor:
 
         if self.dragging or self.surface_preview_mode:
             self._set_overlay(
-                "唯一地图：整个星球\n"
-                "显示模式：低延迟缩略地表预览\n"
-                f"缩放 {self.zoom:.2f}×（停止操作后恢复精细显示）"
+                t("唯一地图：整个星球\n显示模式：低延迟缩略地表预览\n缩放 {zoom:.2f}×（停止操作后恢复精细显示）", zoom=self.zoom)
             )
             self._set_outline(cx, cy, radius, radius <= max(width, height) * 2.0)
             return
 
         query = visibility.query(layout, self.yaw, self.pitch, self.zoom, width, height)
         mode_text = (
-            "缩略地表球面" if self.surface_texture is not None
-            else "正在生成缩略地表缓存"
+            t("缩略地表球面") if self.surface_texture is not None
+            else t("正在生成缩略地表缓存")
         )
         if self.session is not None and self.session.dirty_chunks and self.surface_texture is not None:
-            mode_text += "（包含未保存的实时修改）"
+            mode_text += t("（包含未保存的实时修改）")
         displayed = 0
 
         # The old gate was a hard ``zoom >= 36``, which sat in the middle of a LOD
@@ -2381,21 +2407,16 @@ class ProductionSphereEditor:
                             tags=("detail",),
                         )
                 displayed = len(polygons)
-                mode_text = "真实共享边界六边形（按住左键连续绘制）"
+                mode_text = t("真实共享边界六边形（按住左键连续绘制）")
             else:
-                mode_text = "已保存地表（仍可绘制，放大后才逐格显示）"
+                mode_text = t("已保存地表（仍可绘制，放大后才逐格显示）")
         elif self.tier_policy.tier.render in {"cell_texture", "cell_color"}:
-            mode_text = "候选格子超出逐格预算，放大后才逐格显示（仍可绘制）"
+            mode_text = t("候选格子超出逐格预算，放大后才逐格显示（仍可绘制）")
 
         tier = self.tier_policy.tier
         self._set_outline(cx, cy, radius, radius <= max(width, height) * 2.0)
         self._set_overlay(
-            "唯一地图：整个星球\n"
-            f"档位 {tier.name}：{tier.description}（本档可绘制）\n"
-            f"显示模式：{mode_text}\n"
-            f"当前详细格子：{displayed:,}；候选格子：{query.candidate_cells:,}\n"
-            f"缩放 {self.zoom:.2f}×｜笔刷 {self._brush_diameter_value()} 格"
-            f"（{tier.min_diameter}～{tier.max_diameter}）"
+            t("唯一地图：整个星球\n档位 {name}：{description}（本档可绘制）\n显示模式：{mode_text}\n当前详细格子：{displayed:,}；候选格子：{candidate_cells:,}\n缩放 {zoom:.2f}×｜笔刷 {brush_diameter_value} 格（{min_diameter}～{max_diameter}）", name=tier.name, description=tier.description, mode_text=mode_text, displayed=displayed, candidate_cells=query.candidate_cells, zoom=self.zoom, brush_diameter_value=self._brush_diameter_value(), min_diameter=tier.min_diameter, max_diameter=tier.max_diameter)
         )
         self.canvas.tag_raise("cursor")
 
@@ -2427,19 +2448,19 @@ class ProductionSphereEditor:
 
     def _paint_start(self, event: tk.Event) -> None:
         if self.session is None or self.picker is None:
-            self.status.set("请等待完整星球地图准备完成")
+            self.status.set(t("请等待完整星球地图准备完成"))
             return
         cell_id = self._pick_cell(event.x, event.y)
         if cell_id is None:
-            self.status.set("点击位置在星球轮廓之外")
+            self.status.set(t("点击位置在星球轮廓之外"))
             return
         try:
             tool = self._stroke_tool_from_ui()
         except Exception as exc:
-            messagebox.showerror("球面编辑", str(exc), parent=self.window)
+            messagebox.showerror(t("球面编辑"), str(exc), parent=self.window)
             return
         if tool.tool == "undo" and not self.undo_history.can_undo:
-            self.status.set("撤销栈为空：撤销笔刷只能回退本次会话中已记录的笔划")
+            self.status.set(t("撤销栈为空：撤销笔刷只能回退本次会话中已记录的笔划"))
             return
         self.local_stroke_id += 1
         stroke_id = -self.local_stroke_id
@@ -2448,12 +2469,11 @@ class ProductionSphereEditor:
         self._queue_stroke_segment(
             "local", stroke_id, "start", cell_id, tool
         )
-        action = {"paint": "随机覆盖", "erase": "清除", "undo": "撤销"}.get(
+        action = {"paint": t("随机覆盖"), "erase": t("清除"), "undo": t("撤销")}.get(
             tool.tool, tool.tool
         )
         self.status.set(
-            f"开始连续{action}，直径 {tool.diameter} 格，档位 "
-            f"{self.tier_policy.tier.name}；正在计算首个笔刷区域"
+            t("开始连续{action}，直径 {diameter} 格，档位 {name}；正在计算首个笔刷区域", action=action, diameter=tool.diameter, name=self.tier_policy.tier.name)
         )
 
     def _paint_move(self, event: tk.Event) -> None:
@@ -2529,7 +2549,7 @@ class ProductionSphereEditor:
         tool = self.local_stroke_tool or BrushStrokeTool("erase", 1)
         self.local_stroke_tool = None
         self._queue_stroke_segment("local", stroke_id, "end", -1, tool)
-        self.status.set("鼠标已松开，正在完成连续笔划并合并脏区块")
+        self.status.set(t("鼠标已松开，正在完成连续笔划并合并脏区块"))
 
     def _rotate(self, point: tuple[float, float, float]) -> tuple[float, float, float]:
         return rotate_point(point, self.yaw, self.pitch)
@@ -2612,13 +2632,9 @@ class ProductionSphereEditor:
                     self._apply_zoom_tier()
                     self.create_button.configure(state=tk.NORMAL) if self.create_button is not None else None
                     self.summary.set(
-                        f"CellId：{layout.cell_count:,}\n"
-                        f"普通六边形：{layout.topology.hexagon_count:,}\n"
-                        f"逻辑区块：{layout.chunk_count:,}\n"
-                        f"可见性节点：{visibility.node_count:,}\n"
-                        "展开的全局单格记录：0"
+                        t("CellId：{cell_count:,}\n普通六边形：{hexagon_count:,}\n逻辑区块：{chunk_count:,}\n可见性节点：{node_count:,}\n展开的全局单格记录：0", cell_count=layout.cell_count, hexagon_count=layout.topology.hexagon_count, chunk_count=layout.chunk_count, node_count=visibility.node_count)
                     )
-                    self.status.set("完整星球拓扑与可见性索引已就绪")
+                    self.status.set(t("完整星球拓扑与可见性索引已就绪"))
                     self._refresh_maps()
                     self._draw_overview()
                     if self.single_map_name is not None:
@@ -2631,8 +2647,7 @@ class ProductionSphereEditor:
                     self.worker_running = False
                     self.aggregate_button.configure(state=tk.NORMAL)
                     self.status.set(
-                        f"聚合远景缓存完成：节点 {payload.node_count:,}，"
-                        f"新生成 {payload.generated_count:,}，复用 {payload.reused_count:,}"
+                        t("聚合远景缓存完成：节点 {node_count:,}，新生成 {generated_count:,}，复用 {reused_count:,}", node_count=payload.node_count, generated_count=payload.generated_count, reused_count=payload.reused_count)
                     )
                 elif kind == "surface_ready":
                     self.surface_build_running = False
@@ -2646,12 +2661,12 @@ class ProductionSphereEditor:
                     self.mini_last_key = None
                     try:
                         self.surface_renderer.set_texture(image)
-                        renderer_note = "独立渲染进程已启动"
+                        renderer_note = t("独立渲染进程已启动")
                     except Exception as exc:
-                        renderer_note = f"独立渲染进程启动失败，使用线程后备：{exc}"
+                        renderer_note = t("独立渲染进程启动失败，使用线程后备：{exc}", exc=exc)
                     self.status.set(
-                        ("缩略地表缓存已生成" if info.generated else "缩略地表缓存已载入")
-                        + f"；{renderer_note}"
+                        (t("缩略地表缓存已生成") if info.generated else t("缩略地表缓存已载入"))
+                        + t("；{renderer_note}", renderer_note=renderer_note)
                     )
                     if self.bridge is not None and not self.bridge.closed:
                         self.bridge.push_patch(
@@ -2671,7 +2686,7 @@ class ProductionSphereEditor:
                         self._request_surface_build(force=True)
                 elif kind == "surface_error":
                     self.surface_build_running = False
-                    self.status.set(f"缩略地表缓存失败：{payload}")
+                    self.status.set(t("缩略地表缓存失败：{payload}", payload=payload))
                     if self.surface_rebuild_requested:
                         self._request_surface_build(force=True)
                 elif kind == "surface_live_prepared":
@@ -2702,8 +2717,7 @@ class ProductionSphereEditor:
                                     channels=3,
                                     pixels=region.pixels_rgb,
                                     message=(
-                                        f"L5 远景实时更新：{chunk_count:,} 个区块，"
-                                        f"{region.width}×{region.height} 纹理区域"
+                                        t("L5 远景实时更新：{chunk_count:,} 个区块，{width}×{height} 纹理区域", chunk_count=chunk_count, width=region.width, height=region.height)
                                     ),
                                 )
                             )
@@ -2711,7 +2725,7 @@ class ProductionSphereEditor:
                             try:
                                 self.surface_renderer.set_texture(image)
                             except Exception as exc:
-                                self.status.set(f"L5 实时纹理更新失败：{exc}")
+                                self.status.set(t("L5 实时纹理更新失败：{exc}", exc=exc))
                             self._request_draw(0)
                         for editor in tuple(self._flat_editors):
                             editor.refresh_after_external_edit()
@@ -2722,14 +2736,14 @@ class ProductionSphereEditor:
                         if generation != self.surface_live_generation:
                             continue
                         self.surface_live_prepare_running = False
-                    self.status.set(f"L5 实时纹理索引失败：{exc}")
+                    self.status.set(t("L5 实时纹理索引失败：{exc}", exc=exc))
                 elif kind == "surface_live_update_error":
                     generation, exc = payload
                     with self.surface_live_lock:
                         if generation != self.surface_live_generation:
                             continue
                         self.surface_live_update_running = False
-                    self.status.set(f"L5 实时纹理更新失败：{exc}")
+                    self.status.set(t("L5 实时纹理更新失败：{exc}", exc=exc))
                     self._start_surface_live_update()
                 elif kind == "surface_rendered":
                     self.surface_render_running = False
@@ -2746,12 +2760,12 @@ class ProductionSphereEditor:
                             self.surface_photo_key = key
                             self.surface_displayed_generation = generation
                         except Exception as exc:
-                            self.status.set(f"缩略地表显示失败：{exc}")
+                            self.status.set(t("缩略地表显示失败：{exc}", exc=exc))
                     self._start_surface_render()
                     self._request_draw(0)
                 elif kind == "surface_render_error":
                     self.surface_render_running = False
-                    self.status.set(f"缩略地表渲染失败：{payload}")
+                    self.status.set(t("缩略地表渲染失败：{payload}", payload=payload))
                     self._start_surface_render()
                 elif kind == "mini_globe_rendered":
                     self.mini_render_running = False
@@ -2777,17 +2791,17 @@ class ProductionSphereEditor:
                             self.mini_last_key = key
                             self.mini_frame.lift()
                         except Exception as exc:
-                            self.status.set(f"宏观预览显示失败：{exc}")
+                            self.status.set(t("宏观预览显示失败：{exc}", exc=exc))
                     self._start_mini_render()
                 elif kind == "mini_globe_error":
                     self.mini_render_running = False
                     generation, exc = payload
                     if generation == self.mini_render_generation:
-                        self.status.set(f"宏观预览渲染失败：{exc}")
+                        self.status.set(t("宏观预览渲染失败：{exc}", exc=exc))
                         if self.mini_frame is not None:
                             self.mini_canvas.itemconfigure(
                                 self.mini_message_item,
-                                text="宏观预览暂不可用",
+                                text=t("宏观预览暂不可用"),
                                 state=tk.NORMAL,
                             )
                     self._start_mini_render()
@@ -2795,35 +2809,32 @@ class ProductionSphereEditor:
                     generation, level, count, generated = payload
                     if generation == self.brush_prewarm_generation:
                         self.status.set(
-                            f"笔刷纹理预热完成：LOD{level} 共 {count} 张，"
-                            f"新生成 {generated} 张"
+                            t("笔刷纹理预热完成：LOD{level} 共 {count} 张，新生成 {generated} 张", level=level, count=count, generated=generated)
                         )
                 elif kind == "brush_prewarm_error":
                     generation, exc = payload
                     if generation == self.brush_prewarm_generation:
-                        self.status.set(f"笔刷纹理预热失败：{exc}")
+                        self.status.set(t("笔刷纹理预热失败：{exc}", exc=exc))
                 elif kind == "save_progress":
                     request, stage, completed, total, dirty = payload
                     self.save_stage = stage
                     elapsed = max(0.0, time.monotonic() - self.save_started_at)
                     if stage == "prepare":
                         message = (
-                            f"正在整理 {dirty:,} 个脏区块，准备写盘"
-                            f"（已用 {elapsed:.1f} 秒）……"
+                            t("正在整理 {dirty:,} 个脏区块，准备写盘（已用 {elapsed:.1f} 秒）……", dirty=dirty, elapsed=elapsed)
                         )
                     elif stage == "brush_table":
-                        message = "正在写入笔刷索引……"
+                        message = t("正在写入笔刷索引……")
                     elif stage == "pack":
                         message = (
-                            f"正在写入地图 Pack：{completed:,}/{total:,}"
-                            f"（已用 {elapsed:.1f} 秒）"
+                            t("正在写入地图 Pack：{completed:,}/{total:,}（已用 {elapsed:.1f} 秒）", completed=completed, total=total, elapsed=elapsed)
                         )
                     elif stage == "index":
-                        message = "Pack 已写入，正在原子提交 index.bin……"
+                        message = t("Pack 已写入，正在原子提交 index.bin……")
                     elif stage == "complete":
-                        message = "磁盘写入完成，正在收尾……"
+                        message = t("磁盘写入完成，正在收尾……")
                     else:
-                        message = f"正在保存：{stage}"
+                        message = t("正在保存：{stage}", stage=stage)
                     self.status.set(message)
                     if (
                         request is not None
@@ -2851,7 +2862,7 @@ class ProductionSphereEditor:
                     self.aggregate_button.configure(
                         state=tk.NORMAL if self.session is not None else tk.DISABLED
                     )
-                    message = f"保存完成：写入 {dirty} 个脏区块"
+                    message = t("保存完成：写入 {dirty} 个脏区块", dirty=dirty)
                     self.status.set(message)
                     if self.bridge is not None and not self.bridge.closed:
                         request_id = 0 if request is None else request.request_id
@@ -2886,14 +2897,14 @@ class ProductionSphereEditor:
                     self.aggregate_button.configure(
                         state=tk.NORMAL if self.session is not None else tk.DISABLED
                     )
-                    self.status.set(f"保存失败：{exc}")
+                    self.status.set(t("保存失败：{exc}", exc=exc))
                     if request is not None:
                         if self.bridge is not None and not self.bridge.closed:
                             self.bridge.push_patch(
-                                GpuStatusPatch(request.request_id, False, f"保存失败：{exc}")
+                                GpuStatusPatch(request.request_id, False, t("保存失败：{exc}", exc=exc))
                             )
                     else:
-                        messagebox.showerror("保存", str(exc), parent=self.window)
+                        messagebox.showerror(t("保存"), str(exc), parent=self.window)
                     self._resume_pending_save()
                     self._start_view_worker()
                 elif kind == "embedded_gpu_ready":
@@ -2906,8 +2917,8 @@ class ProductionSphereEditor:
                     if self.bridge is not None:
                         self.bridge.close()
                         self.bridge = None
-                    self.gpu_button.configure(text="打开/重启 GPU 主视口", state=tk.NORMAL)
-                    self.status.set(f"嵌入式 GPU 主视口失败，已回退到软件视口：{payload}")
+                    self.gpu_button.configure(text=t("打开/重启 GPU 主视口"), state=tk.NORMAL)
+                    self.status.set(t("嵌入式 GPU 主视口失败，已回退到软件视口：{payload}", payload=payload))
                     self._request_draw(0)
                 elif kind == "gpu_ready":
                     self.worker_running = False
@@ -2916,19 +2927,17 @@ class ProductionSphereEditor:
                     self._launch_gpu(frame, batch)
                 elif kind == "stroke_result":
                     source, stroke_id, phase, touched, changed, tool = payload
-                    action = {"paint": "随机覆盖", "erase": "清除", "undo": "撤销"}.get(
+                    action = {"paint": t("随机覆盖"), "erase": t("清除"), "undo": t("撤销")}.get(
                         tool.tool, tool.tool
                     )
                     if phase == "end":
                         self._refresh_undo_label()
                         self.status.set(
-                            f"连续笔划结束：本笔覆盖 {touched:,} 个去重格子；"
-                            "Ctrl+Z 可整笔撤销，Ctrl+S 保存"
+                            t("连续笔划结束：本笔覆盖 {touched:,} 个去重格子；Ctrl+Z 可整笔撤销，Ctrl+S 保存", touched=touched)
                         )
                     else:
                         self.status.set(
-                            f"连续{action}：本段触及 {touched:,} 格，实际改写 {changed:,} 格，"
-                            f"直径 {tool.diameter} 格"
+                            t("连续{action}：本段触及 {touched:,} 格，实际改写 {changed:,} 格，直径 {diameter} 格", action=action, touched=touched, changed=changed, diameter=tool.diameter)
                         )
                     self._request_draw(16 if phase != "end" else 0)
                 elif kind == "stroke_error":
@@ -2936,9 +2945,9 @@ class ProductionSphereEditor:
                     self.active_strokes.pop(int(stroke_id), None)
                     if source == "gpu" and self.bridge is not None:
                         self.bridge.push_patch(
-                            GpuStatusPatch(int(request_id), False, f"连续绘制失败：{exc}")
+                            GpuStatusPatch(int(request_id), False, t("连续绘制失败：{exc}", exc=exc))
                         )
-                    self.status.set(f"连续绘制失败：{exc}")
+                    self.status.set(t("连续绘制失败：{exc}", exc=exc))
                 elif kind == "stroke_idle":
                     if not self._strokes_busy():
                         self._resume_pending_save()
@@ -3001,7 +3010,7 @@ class ProductionSphereEditor:
                     )
                     if target_bridge is self.bridge:
                         target_bridge.close()
-                    self.status.set(f"GPU 自动恢复失败，已切换软件视图：{exc}")
+                    self.status.set(t("GPU 自动恢复失败，已切换软件视图：{exc}", exc=exc))
                 elif kind == "gpu_capabilities":
                     if self.controller is not None:
                         try:
@@ -3009,33 +3018,32 @@ class ProductionSphereEditor:
                                 int(payload)
                             )
                             self.status.set(
-                                f"GPU 纹理数组层上限：{limit:,}；"
-                                "显存缓存将在此范围内按 LRU 复用"
+                                t("GPU 纹理数组层上限：{limit:,}；显存缓存将在此范围内按 LRU 复用", limit=limit)
                             )
                         except Exception as exc:
-                            self.status.set(f"GPU 纹理能力同步失败：{exc}")
+                            self.status.set(t("GPU 纹理能力同步失败：{exc}", exc=exc))
                 elif kind == "view_error":
                     self.view_worker_running = False
                     request_id, exc = payload
                     self.view_load_progress.stop()
                     self.view_load_progress.configure(mode="determinate")
                     self.view_load_value.set(0.0)
-                    self.view_load_text.set("视图：加载失败")
+                    self.view_load_text.set(t("视图：加载失败"))
                     if self.bridge is not None:
                         self.bridge.push_patch(GpuStatusPatch(request_id, False, str(exc)))
                     if self.pending_view is not None:
                         self._mark_view_loading()
                     self._start_view_worker()
                 elif kind == "gpu_error":
-                    self.status.set(f"GPU 窗口错误：{payload}")
-                    messagebox.showerror("GPU 编辑器", str(payload), parent=self.window)
+                    self.status.set(t("GPU 窗口错误：{payload}", payload=payload))
+                    messagebox.showerror(t("GPU 编辑器"), str(payload), parent=self.window)
                 elif kind == "error":
                     self.worker_running = False
                     self.gpu_button.configure(state=tk.NORMAL if self.session is not None else tk.DISABLED)
                     self.aggregate_button.configure(state=tk.NORMAL if self.session is not None else tk.DISABLED)
                     self.flat_button.configure(state=tk.NORMAL if self.session is not None else tk.DISABLED)
-                    self.status.set(f"操作失败：{payload}")
-                    messagebox.showerror("生产编辑器", str(payload), parent=self.window)
+                    self.status.set(t("操作失败：{payload}", payload=payload))
+                    messagebox.showerror(t("生产编辑器"), str(payload), parent=self.window)
         except queue.Empty:
             pass
         if self.save_running and self.save_stage == "waiting":
@@ -3043,8 +3051,7 @@ class ProductionSphereEditor:
             if elapsed_second != self.save_status_second:
                 self.save_status_second = elapsed_second
                 self.status.set(
-                    "保存已提交，正在等待当前视图计算释放地图锁"
-                    f"（{elapsed_second} 秒）……"
+                    t("保存已提交，正在等待当前视图计算释放地图锁（{elapsed_second} 秒）……", elapsed_second=elapsed_second)
                 )
         if (
             self.save_running
@@ -3066,7 +3073,7 @@ class ProductionSphereEditor:
             self.aggregate_button.configure(
                 state=tk.NORMAL if self.session is not None else tk.DISABLED
             )
-            self.status.set("保存线程异常结束，保存状态已解除；请重试并查看日志")
+            self.status.set(t("保存线程异常结束，保存状态已解除；请重试并查看日志"))
             self._start_view_worker()
         if self.window.winfo_exists():
             if not self.results.empty():
@@ -3084,7 +3091,7 @@ class ProductionSphereEditor:
     def _close(self) -> None:
         if self.save_running:
             self.close_after_save = True
-            self.status.set("地图正在后台保存；保存完成后将自动关闭")
+            self.status.set(t("地图正在后台保存；保存完成后将自动关闭"))
             return
         session = self.session
         if (
@@ -3092,18 +3099,17 @@ class ProductionSphereEditor:
             and (session.dirty_chunks or session.brush_table_dirty)
         ):
             unsaved_parts = [
-                f"{len(session.dirty_chunks):,} 个地图区块"
+                t("{len:,} 个地图区块", len=len(session.dirty_chunks))
                 if session.dirty_chunks
                 else ""
             ]
             if session.brush_table_dirty:
-                unsaved_parts.append("笔刷索引")
-            unsaved = "、".join(part for part in unsaved_parts if part)
+                unsaved_parts.append(t("笔刷索引"))
+            unsaved = t("、").join(part for part in unsaved_parts if part)
             decision = messagebox.askyesnocancel(
-                "关闭程序",
+                t("关闭程序"),
                 (
-                    f"还有未保存内容：{unsaved}。\n\n"
-                    "是否保存后关闭？"
+                    t("还有未保存内容：{unsaved}。\n\n是否保存后关闭？", unsaved=unsaved)
                 ),
                 parent=self.window,
             )

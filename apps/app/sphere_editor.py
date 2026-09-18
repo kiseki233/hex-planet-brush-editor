@@ -43,13 +43,14 @@ from .sphere_map_store import SphereMapError, SphereMapSession, SphereMapStore
 from .sphere_viewport import ProjectedCell, SphereViewport, ViewportProjection
 from .thumbnail import BrushThumbnailCache
 from .topology import DualTopology, generate_dual_topology, write_topology_cache
+from .i18n import t
 
 
 class SphereMapEditor:
     def __init__(self, parent: tk.Misc, paths: ProjectPaths) -> None:
         self.paths = paths
         self.window = tk.Toplevel(parent)
-        self.window.title("球面六边形地图编辑器 v1.3.1")
+        self.window.title(t("球面六边形地图编辑器 v1.3.1"))
         self.window.geometry("1360x860")
         self.window.minsize(1040, 680)
         self.window.protocol("WM_DELETE_WINDOW", self._on_close)
@@ -102,9 +103,9 @@ class SphereMapEditor:
         self.map_choice = tk.StringVar(value="")
         self.selected_tool = tk.StringVar(value="paint")
         self.rotation = tk.IntVar(value=0)
-        self.status = tk.StringVar(value="正在准备球面编辑器")
-        self.summary = tk.StringVar(value="尚未生成拓扑")
-        self.selected_info = tk.StringVar(value="未选择格子")
+        self.status = tk.StringVar(value=t("正在准备球面编辑器"))
+        self.summary = tk.StringVar(value=t("尚未生成拓扑"))
+        self.selected_info = tk.StringVar(value=t("未选择格子"))
 
         self._build_ui()
         self.refresh_brushes(show_dialog=False)
@@ -132,12 +133,12 @@ class SphereMapEditor:
         ).pack(fill=tk.X, side=tk.BOTTOM)
 
     def _build_brush_panel(self, parent: ttk.Frame) -> None:
-        frame = ttk.LabelFrame(parent, text="笔刷库", padding=8)
+        frame = ttk.LabelFrame(parent, text=t("笔刷库"), padding=8)
         frame.grid(row=0, column=0, sticky="ns", padx=(0, 8))
         frame.rowconfigure(1, weight=1)
         frame.columnconfigure(0, weight=1)
 
-        ttk.Button(frame, text="刷新笔刷库", command=self.refresh_brushes).grid(
+        ttk.Button(frame, text=t("刷新笔刷库"), command=self.refresh_brushes).grid(
             row=0, column=0, sticky="ew", pady=(0, 6)
         )
 
@@ -152,12 +153,12 @@ class SphereMapEditor:
         self.brush_tree.configure(yscrollcommand=scrollbar.set)
         self.brush_tree.bind("<<TreeviewSelect>>", self._on_brush_selected)
 
-        ttk.Label(frame, text="无效或缺失资源").grid(row=2, column=0, sticky="w", pady=(8, 3))
+        ttk.Label(frame, text=t("无效或缺失资源")).grid(row=2, column=0, sticky="w", pady=(8, 3))
         self.issue_text = tk.Text(frame, width=32, height=9, wrap=tk.WORD, state=tk.DISABLED)
         self.issue_text.grid(row=3, column=0, sticky="ew")
 
     def _build_canvas_panel(self, parent: ttk.Frame) -> None:
-        frame = ttk.LabelFrame(parent, text="球面可视编辑视口", padding=6)
+        frame = ttk.LabelFrame(parent, text=t("球面可视编辑视口"), padding=6)
         frame.grid(row=0, column=1, sticky="nsew")
         frame.rowconfigure(0, weight=1)
         frame.columnconfigure(0, weight=1)
@@ -174,11 +175,11 @@ class SphereMapEditor:
         self.canvas.bind("<Button-5>", lambda _event: self._zoom_steps(-1.0))
 
     def _build_control_panel(self, parent: ttk.Frame) -> None:
-        frame = ttk.LabelFrame(parent, text="球面地图与工具", padding=10)
+        frame = ttk.LabelFrame(parent, text=t("球面地图与工具"), padding=10)
         frame.grid(row=0, column=2, sticky="ns", padx=(8, 0))
         frame.columnconfigure(0, weight=1)
 
-        ttk.Label(frame, text="测试细分频率").grid(row=0, column=0, sticky="w")
+        ttk.Label(frame, text=t("测试细分频率")).grid(row=0, column=0, sticky="w")
         self.frequency_combo = ttk.Combobox(
             frame,
             textvariable=self.frequency,
@@ -188,36 +189,36 @@ class SphereMapEditor:
         )
         self.frequency_combo.grid(row=1, column=0, sticky="ew", pady=(2, 5))
         self.frequency_combo.bind("<<ComboboxSelected>>", self._frequency_changed)
-        self.generate_button = ttk.Button(frame, text="生成拓扑与分块", command=self.generate_layout)
+        self.generate_button = ttk.Button(frame, text=t("生成拓扑与分块"), command=self.generate_layout)
         self.generate_button.grid(row=2, column=0, sticky="ew")
 
         ttk.Separator(frame).grid(row=3, column=0, sticky="ew", pady=9)
-        ttk.Label(frame, text="新地图名称").grid(row=4, column=0, sticky="w")
+        ttk.Label(frame, text=t("新地图名称")).grid(row=4, column=0, sticky="w")
         ttk.Entry(frame, textvariable=self.map_name, width=25).grid(
             row=5, column=0, sticky="ew", pady=(2, 5)
         )
         self.create_button = ttk.Button(
-            frame, text="新建球面地图", command=self.create_map, state=tk.DISABLED
+            frame, text=t("新建球面地图"), command=self.create_map, state=tk.DISABLED
         )
         self.create_button.grid(row=6, column=0, sticky="ew")
 
-        ttk.Label(frame, text="打开兼容地图").grid(row=7, column=0, sticky="w", pady=(8, 0))
+        ttk.Label(frame, text=t("打开兼容地图")).grid(row=7, column=0, sticky="w", pady=(8, 0))
         self.map_combo = ttk.Combobox(frame, textvariable=self.map_choice, state="readonly", width=23)
         self.map_combo.grid(row=8, column=0, sticky="ew", pady=(2, 5))
-        self.open_button = ttk.Button(frame, text="打开", command=self.open_map, state=tk.DISABLED)
+        self.open_button = ttk.Button(frame, text=t("打开"), command=self.open_map, state=tk.DISABLED)
         self.open_button.grid(row=9, column=0, sticky="ew")
 
         ttk.Separator(frame).grid(row=10, column=0, sticky="ew", pady=9)
         ttk.Radiobutton(
-            frame, text="放置笔刷", variable=self.selected_tool, value="paint",
+            frame, text=t("放置笔刷"), variable=self.selected_tool, value="paint",
             command=self._sync_gpu_edit_state,
         ).grid(row=11, column=0, sticky="w")
         ttk.Radiobutton(
-            frame, text="清除格子", variable=self.selected_tool, value="erase",
+            frame, text=t("清除格子"), variable=self.selected_tool, value="erase",
             command=self._sync_gpu_edit_state,
         ).grid(row=12, column=0, sticky="w")
 
-        ttk.Label(frame, text="旋转方向").grid(row=13, column=0, sticky="w", pady=(8, 3))
+        ttk.Label(frame, text=t("旋转方向")).grid(row=13, column=0, sticky="w", pady=(8, 3))
         rotation_grid = ttk.Frame(frame)
         rotation_grid.grid(row=14, column=0, sticky="ew")
         for value in range(6):
@@ -229,20 +230,20 @@ class SphereMapEditor:
                 command=self._update_selected_preview,
             ).grid(row=value // 2, column=value % 2, sticky="w", padx=(0, 8), pady=1)
 
-        ttk.Label(frame, text="当前笔刷").grid(row=15, column=0, sticky="w", pady=(8, 3))
-        self.preview_label = ttk.Label(frame, text="未选择", anchor=tk.CENTER)
+        ttk.Label(frame, text=t("当前笔刷")).grid(row=15, column=0, sticky="w", pady=(8, 3))
+        self.preview_label = ttk.Label(frame, text=t("未选择"), anchor=tk.CENTER)
         self.preview_label.grid(row=16, column=0, sticky="ew")
         self.selected_path_label = ttk.Label(frame, text="", wraplength=220, justify=tk.LEFT)
         self.selected_path_label.grid(row=17, column=0, sticky="ew", pady=(2, 0))
 
-        self.save_button = ttk.Button(frame, text="保存脏区块", command=self.save_map, state=tk.DISABLED)
+        self.save_button = ttk.Button(frame, text=t("保存脏区块"), command=self.save_map, state=tk.DISABLED)
         self.save_button.grid(row=18, column=0, sticky="ew", pady=(9, 0))
         self.overview_button = ttk.Button(
-            frame, text="生成/打开星球远景预览", command=self.open_planet_overview, state=tk.DISABLED
+            frame, text=t("生成/打开星球远景预览"), command=self.open_planet_overview, state=tk.DISABLED
         )
         self.overview_button.grid(row=19, column=0, sticky="ew", pady=(5, 0))
         self.gpu_preview_button = ttk.Button(
-            frame, text="打开 GPU 可编辑窗口", command=self.open_gpu_preview, state=tk.DISABLED
+            frame, text=t("打开 GPU 可编辑窗口"), command=self.open_gpu_preview, state=tk.DISABLED
         )
         self.gpu_preview_button.grid(row=20, column=0, sticky="ew", pady=(5, 0))
 
@@ -258,7 +259,7 @@ class SphereMapEditor:
         ttk.Label(
             frame,
             text=(
-                "左键：放置或清除\n"
+                t("左键：放置或清除\n"
                 "右键拖动：旋转球体\n"
                 "滚轮：缩放视口\n"
                 "Ctrl+S：保存\n\n"
@@ -266,7 +267,7 @@ class SphereMapEditor:
                 "笔刷纹理按 512/256/128/64 四级 LOD 后台生成。\n"
                 "远距离使用分层区块可见性索引和区块边界投影，并可生成 512×256 星球缓存。\n"
                 "Windows 可打开原生 OpenGL 3.3 GPU 编辑窗口；左键编辑、右键旋转、Ctrl+S 保存。纹理通过 2D Array 上传，六方向旋转在着色器执行。\n"
-                "Tk 编辑视口仍保留为正确性与回退界面，测试频率开放到 frequency=128。"
+                "Tk 编辑视口仍保留为正确性与回退界面，测试频率开放到 frequency=128。")
             ),
             wraplength=235,
             justify=tk.LEFT,
@@ -276,7 +277,7 @@ class SphereMapEditor:
         try:
             self.scan_result = self.catalog.scan()
         except Exception as exc:
-            messagebox.showerror("错误", f"刷新笔刷库失败：\n{exc}", parent=self.window)
+            messagebox.showerror(t("错误"), t("刷新笔刷库失败：\n{exc}", exc=exc), parent=self.window)
             return
         if self.gpu_edit_bridge is not None:
             self._close_gpu_edit_bridge()
@@ -292,12 +293,11 @@ class SphereMapEditor:
         self._request_planet_cache()
         self._redraw()
         message = (
-            f"笔刷扫描完成：有效 {self.scan_result.active_count}，缺失 {self.scan_result.missing_count}，"
-            f"无效 {len(self.scan_result.invalid)}"
+            t("笔刷扫描完成：有效 {active_count}，缺失 {missing_count}，无效 {len}", active_count=self.scan_result.active_count, missing_count=self.scan_result.missing_count, len=len(self.scan_result.invalid))
         )
         self.status.set(message)
         if show_dialog:
-            messagebox.showinfo("笔刷库", message, parent=self.window)
+            messagebox.showinfo(t("笔刷库"), message, parent=self.window)
 
     def _populate_brush_tree(self) -> None:
         self.brush_tree.delete(*self.brush_tree.get_children())
@@ -324,12 +324,12 @@ class SphereMapEditor:
         lines: list[str] = []
         if self.scan_result is not None:
             for invalid in self.scan_result.invalid:
-                lines.append(f"无效：{invalid.relative_path}\n  {self._reason_text(invalid.reason)}")
+                lines.append(t("无效：{relative_path}\n  {reason_text}", relative_path=invalid.relative_path, reason_text=self._reason_text(invalid.reason)))
             for record in self.scan_result.records:
                 if record.state == "missing":
-                    lines.append(f"缺失：{record.relative_path}\n  UID 保留，球面地图引用未清除")
+                    lines.append(t("缺失：{relative_path}\n  UID 保留，球面地图引用未清除", relative_path=record.relative_path))
         if not lines:
-            lines.append("没有发现问题")
+            lines.append(t("没有发现问题"))
         self.issue_text.configure(state=tk.NORMAL)
         self.issue_text.delete("1.0", tk.END)
         self.issue_text.insert("1.0", "\n\n".join(lines))
@@ -338,15 +338,15 @@ class SphereMapEditor:
     @staticmethod
     def _reason_text(reason: str) -> str:
         if reason.startswith("invalid_size:"):
-            return f"尺寸必须为 512×512，实际为 {reason.split(':', 1)[1]}"
+            return t("尺寸必须为 512×512，实际为 {split}", split=reason.split(':', 1)[1])
         if reason.startswith("invalid_color_type:"):
-            return "只支持 RGB 或 RGBA PNG"
+            return t("只支持 RGB 或 RGBA PNG")
         if reason.startswith("invalid_bit_depth:"):
-            return "只支持 8 位 RGB/RGBA PNG"
+            return t("只支持 8 位 RGB/RGBA PNG")
         if reason == "brush_limit_exceeded":
-            return "有效笔刷数量超过 4095 张"
+            return t("有效笔刷数量超过 4095 张")
         if reason == "not_png":
-            return "文件扩展名为 PNG，但内容不是 PNG"
+            return t("文件扩展名为 PNG，但内容不是 PNG")
         return reason
 
     def _on_brush_selected(self, _event: tk.Event) -> None:
@@ -365,7 +365,7 @@ class SphereMapEditor:
     def _update_selected_preview(self) -> None:
         self._sync_gpu_edit_state()
         if self.selected_brush_uid is None:
-            self.preview_label.configure(image="", text="未选择")
+            self.preview_label.configure(image="", text=t("未选择"))
             self.selected_path_label.configure(text="")
             return
         record = self.records_by_uid.get(self.selected_brush_uid)
@@ -373,7 +373,7 @@ class SphereMapEditor:
             image = self.preview_cache.get_missing(self.rotation.get())
             self.preview_label.configure(image=image, text="")
             self.preview_label.image = image
-            self.selected_path_label.configure(text="笔刷文件缺失")
+            self.selected_path_label.configure(text=t("笔刷文件缺失"))
             return
         image = self.preview_cache.get(record.uid, record.relative_path, self.rotation.get())
         self.preview_label.configure(image=image, text="")
@@ -382,7 +382,7 @@ class SphereMapEditor:
 
     def _frequency_changed(self, _event: tk.Event) -> None:
         self.map_name.set(f"planet_sphere_f{self.frequency.get()}")
-        self.status.set("频率已改变，点击“生成拓扑与分块”应用")
+        self.status.set(t("频率已改变，点击“生成拓扑与分块”应用"))
 
     def generate_layout(self) -> None:
         if self.generating:
@@ -393,7 +393,7 @@ class SphereMapEditor:
         try:
             frequency = int(self.frequency.get())
         except ValueError:
-            messagebox.showerror("错误", "细分频率无效", parent=self.window)
+            messagebox.showerror(t("错误"), t("细分频率无效"), parent=self.window)
             return
         self.generating = True
         self.generate_button.configure(state=tk.DISABLED)
@@ -402,7 +402,7 @@ class SphereMapEditor:
         self.save_button.configure(state=tk.DISABLED)
         self.overview_button.configure(state=tk.DISABLED)
         self.gpu_preview_button.configure(state=tk.DISABLED)
-        self.status.set(f"正在生成 frequency={frequency} 的拓扑与连通分块……")
+        self.status.set(t("正在生成 frequency={frequency} 的拓扑与连通分块……", frequency=frequency))
         threading.Thread(target=self._generate_worker, args=(frequency,), daemon=True).start()
         self.window.after(50, self._poll_generation)
 
@@ -430,8 +430,8 @@ class SphereMapEditor:
         self.generating = False
         self.generate_button.configure(state=tk.NORMAL)
         if state == "error":
-            self.status.set("拓扑与分块生成失败")
-            messagebox.showerror("生成失败", str(value), parent=self.window)
+            self.status.set(t("拓扑与分块生成失败"))
+            messagebox.showerror(t("生成失败"), str(value), parent=self.window)
             return
         topology, layout, visibility_index = value
         self.topology = topology
@@ -448,7 +448,7 @@ class SphereMapEditor:
         self.create_button.configure(state=tk.NORMAL)
         self._refresh_map_choices()
         self.status.set(
-            f"拓扑、分块与层级可见性已准备：Cell {layout.cell_count:,}，区块 {layout.chunk_count:,}，索引节点 {visibility_index.node_count:,}"
+            t("拓扑、分块与层级可见性已准备：Cell {cell_count:,}，区块 {chunk_count:,}，索引节点 {node_count:,}", cell_count=layout.cell_count, chunk_count=layout.chunk_count, node_count=visibility_index.node_count)
         )
         self._redraw()
 
@@ -474,7 +474,7 @@ class SphereMapEditor:
         try:
             session = self.store.create_blank(self.map_name.get().strip(), layout)
         except (SphereMapError, OSError) as exc:
-            messagebox.showerror("新建失败", str(exc), parent=self.window)
+            messagebox.showerror(t("新建失败"), str(exc), parent=self.window)
             return
         self.session = session
         self.chunk_loader.set_session(session)
@@ -484,7 +484,7 @@ class SphereMapEditor:
         self.overview_button.configure(state=tk.NORMAL)
         self.gpu_preview_button.configure(state=tk.NORMAL)
         self._refresh_map_choices()
-        self.status.set(f"已新建球面地图：{session.name}")
+        self.status.set(t("已新建球面地图：{name}", name=session.name))
         self.planet_refresh_requested = True
         self._request_planet_cache()
         self._redraw()
@@ -500,7 +500,7 @@ class SphereMapEditor:
         try:
             session = self.store.open(name, layout)
         except (SphereMapError, OSError) as exc:
-            messagebox.showerror("打开失败", str(exc), parent=self.window)
+            messagebox.showerror(t("打开失败"), str(exc), parent=self.window)
             return
         self.session = session
         self.chunk_loader.set_session(session)
@@ -510,7 +510,7 @@ class SphereMapEditor:
         self.save_button.configure(state=tk.NORMAL)
         self.overview_button.configure(state=tk.NORMAL)
         self.gpu_preview_button.configure(state=tk.NORMAL)
-        self.status.set(f"已打开球面地图：{session.name}")
+        self.status.set(t("已打开球面地图：{name}", name=session.name))
         self.planet_refresh_requested = True
         self._request_planet_cache()
         self._redraw()
@@ -533,7 +533,7 @@ class SphereMapEditor:
         try:
             bridge.set_tool_state(self._current_gpu_tool_state())
         except ValueError as exc:
-            self.status.set(f"GPU 工具状态无效：{exc}")
+            self.status.set(t("GPU 工具状态无效：{exc}", exc=exc))
 
     def _close_gpu_edit_bridge(self) -> None:
         bridge = self.gpu_edit_bridge
@@ -576,18 +576,18 @@ class SphereMapEditor:
     ) -> bool:
         if request.phase == "end":
             bridge.push_patch(
-                GpuStatusPatch(request.request_id, True, "连续笔划结束")
+                GpuStatusPatch(request.request_id, True, t("连续笔划结束"))
             )
             return False
         session = self.session
         topology = self.topology
         lod_level = self.gpu_edit_lod_level
         if session is None or topology is None or lod_level is None:
-            bridge.push_patch(GpuStatusPatch(request.request_id, False, "当前地图会话已经关闭"))
+            bridge.push_patch(GpuStatusPatch(request.request_id, False, t("当前地图会话已经关闭")))
             return False
         if request.cell_id in set(topology.pentagon_ids):
             bridge.push_patch(
-                GpuStatusPatch(request.request_id, False, f"CellId {request.cell_id} 是隐藏五边形")
+                GpuStatusPatch(request.request_id, False, t("CellId {cell_id} 是隐藏五边形", cell_id=request.cell_id))
             )
             return False
 
@@ -602,13 +602,13 @@ class SphereMapEditor:
                 pixels = None
                 width = 0
                 height = 0
-                action = "清除"
+                action = t("清除")
             else:
                 if state.brush_uid is None:
-                    raise SphereMapError("请先在主窗口选择一张有效笔刷")
+                    raise SphereMapError(t("请先在主窗口选择一张有效笔刷"))
                 record = self.records_by_uid.get(state.brush_uid)
                 if record is None or record.state != "active":
-                    raise SphereMapError("当前笔刷文件缺失，不能放置")
+                    raise SphereMapError(t("当前笔刷文件缺失，不能放置"))
                 session.set_cell(
                     request.cell_id,
                     self.store,
@@ -632,15 +632,15 @@ class SphereMapEditor:
                     pixels = payload.pixels_rgba
                     width = payload.width
                     height = payload.height
-                action = "放置"
+                action = t("放置")
         except (SphereMapError, OSError, ValueError) as exc:
-            bridge.push_patch(GpuStatusPatch(request.request_id, False, f"编辑失败：{exc}"))
-            self.status.set(f"GPU 编辑失败：{exc}")
+            bridge.push_patch(GpuStatusPatch(request.request_id, False, t("编辑失败：{exc}", exc=exc)))
+            self.status.set(t("GPU 编辑失败：{exc}", exc=exc))
             return False
 
         self.selected_cell_id = request.cell_id
         self.distant_builder.invalidate((chunk_id,))
-        message = f"已{action} CellId {request.cell_id}，Chunk {chunk_id} 已标记为脏区块"
+        message = t("已{action} CellId {cell_id}，Chunk {chunk_id} 已标记为脏区块", action=action, cell_id=request.cell_id, chunk_id=chunk_id)
         bridge.push_patch(
             GpuCellPatch(
                 request_id=request.request_id,
@@ -700,14 +700,14 @@ class SphereMapEditor:
                 )
             )
         except (SphereMapError, OSError, ValueError) as exc:
-            bridge.push_patch(GpuStatusPatch(0, False, f"同步失败：{exc}"))
+            bridge.push_patch(GpuStatusPatch(0, False, t("同步失败：{exc}", exc=exc)))
 
     def _handle_gpu_save_request(
         self, bridge: GpuEditBridge, request: GpuSaveRequest
     ) -> None:
         session = self.session
         if session is None:
-            bridge.push_patch(GpuStatusPatch(request.request_id, False, "当前没有已打开的球面地图"))
+            bridge.push_patch(GpuStatusPatch(request.request_id, False, t("当前没有已打开的球面地图")))
             return
         dirty_chunk_ids = tuple(sorted(session.dirty_chunks))
         dirty_before = len(dirty_chunk_ids)
@@ -725,36 +725,36 @@ class SphereMapEditor:
                 self.planet_refresh_requested = True
                 self._request_planet_cache()
         except (SphereMapError, OSError) as exc:
-            message = f"保存失败：{exc}"
+            message = t("保存失败：{exc}", exc=exc)
             bridge.push_patch(GpuStatusPatch(request.request_id, False, message))
             self.status.set(message)
             return
-        message = f"保存完成：写入 {dirty_before} 个脏区块"
+        message = t("保存完成：写入 {dirty_before} 个脏区块", dirty_before=dirty_before)
         bridge.push_patch(GpuStatusPatch(request.request_id, True, message))
         self.status.set(message)
 
     def open_gpu_preview(self) -> None:
         if self.gpu_preview_pending:
-            self.status.set("GPU 批量数据正在生成")
+            self.status.set(t("GPU 批量数据正在生成"))
             return
         topology = self.topology
         layout = self.layout
         session = self.session
         projection = self.projection
         if topology is None or layout is None or session is None or projection is None:
-            self.status.set("请先生成拓扑并新建或打开球面地图")
+            self.status.set(t("请先生成拓扑并新建或打开球面地图"))
             return
         if self.current_lod_level > 3 or not projection.visible_cell_ids:
             messagebox.showinfo(
-                "GPU 编辑器",
-                "当前处于区块远景模式，请放大到逐格 LOD 后再打开 GPU 编辑器。",
+                t("GPU 编辑器"),
+                t("当前处于区块远景模式，请放大到逐格 LOD 后再打开 GPU 编辑器。"),
                 parent=self.window,
             )
             return
         if not native_gpu_supported():
             messagebox.showinfo(
-                "GPU 编辑器",
-                "原生 OpenGL 预览当前只在 Windows 上启用。数据批处理与纹理数组测试仍可在其他平台运行。",
+                t("GPU 编辑器"),
+                t("原生 OpenGL 预览当前只在 Windows 上启用。数据批处理与纹理数组测试仍可在其他平台运行。"),
                 parent=self.window,
             )
             return
@@ -772,9 +772,9 @@ class SphereMapEditor:
         zoom = self.viewport.zoom
         self.gpu_preview_pending = True
         self.gpu_preview_button.configure(state=tk.DISABLED)
-        scope_text = "完整测试星球" if complete_test_sphere else "当前视口快照"
+        scope_text = t("完整测试星球") if complete_test_sphere else t("当前视口快照")
         self.status.set(
-            f"正在生成 GPU 实例批次：{scope_text}，候选 {len(cell_ids):,} 格，LOD{lod_level}……"
+            t("正在生成 GPU 实例批次：{scope_text}，候选 {len:,} 格，LOD{lod_level}……", scope_text=scope_text, len=len(cell_ids), lod_level=lod_level)
         )
 
         def worker() -> None:
@@ -803,8 +803,8 @@ class SphereMapEditor:
         if self.session is not None:
             self.gpu_preview_button.configure(state=tk.NORMAL)
         if state == "error":
-            self.status.set("GPU 实例批次生成失败")
-            messagebox.showerror("GPU 编辑器失败", str(value), parent=self.window)
+            self.status.set(t("GPU 实例批次生成失败"))
+            messagebox.showerror(t("GPU 编辑器失败"), str(value), parent=self.window)
             return
         batch, topology, yaw, pitch, zoom = value
         self._close_gpu_edit_bridge()
@@ -818,7 +818,7 @@ class SphereMapEditor:
 
         def report_error(message: str) -> None:
             try:
-                self.window.after(0, lambda: messagebox.showerror("GPU 编辑器失败", message, parent=self.window))
+                self.window.after(0, lambda: messagebox.showerror(t("GPU 编辑器失败"), message, parent=self.window))
             except tk.TclError:
                 return
 
@@ -835,16 +835,16 @@ class SphereMapEditor:
         if not launch.started:
             bridge.close()
             self.gpu_edit_bridge = None
-            messagebox.showerror("GPU 编辑器失败", launch.reason, parent=self.window)
+            messagebox.showerror(t("GPU 编辑器失败"), launch.reason, parent=self.window)
             return
         self.status.set(
-            f"GPU 可编辑窗口已启动：实例 {batch.instance_count:,}，纹理数组层 {batch.texture_layer_count}，LOD{batch.lod_level}"
+            t("GPU 可编辑窗口已启动：实例 {instance_count:,}，纹理数组层 {texture_layer_count}，LOD{lod_level}", instance_count=batch.instance_count, texture_layer_count=batch.texture_layer_count, lod_level=batch.lod_level)
         )
 
     def save_map(self) -> None:
         session = self.session
         if session is None:
-            self.status.set("当前没有已打开的球面地图")
+            self.status.set(t("当前没有已打开的球面地图"))
             return
         dirty_chunk_ids = tuple(sorted(session.dirty_chunks))
         dirty_before = len(dirty_chunk_ids)
@@ -863,10 +863,10 @@ class SphereMapEditor:
                 self._request_planet_cache()
         except (SphereMapError, OSError) as exc:
             if self.gpu_edit_bridge is not None:
-                self.gpu_edit_bridge.push_patch(GpuStatusPatch(0, False, f"保存失败：{exc}"))
-            messagebox.showerror("保存失败", str(exc), parent=self.window)
+                self.gpu_edit_bridge.push_patch(GpuStatusPatch(0, False, t("保存失败：{exc}", exc=exc)))
+            messagebox.showerror(t("保存失败"), str(exc), parent=self.window)
             return
-        message = f"保存完成：写入 {dirty_before} 个脏区块"
+        message = t("保存完成：写入 {dirty_before} 个脏区块", dirty_before=dirty_before)
         if self.gpu_edit_bridge is not None:
             self.gpu_edit_bridge.push_patch(GpuStatusPatch(0, True, message))
         self.status.set(message)
@@ -889,14 +889,14 @@ class SphereMapEditor:
         session = self.session
         topology = self.topology
         if session is None or topology is None:
-            self.status.set("请先新建或打开球面地图")
+            self.status.set(t("请先新建或打开球面地图"))
             return
         if session.dirty_chunks or session.brush_table_dirty:
-            self.status.set("星球远景缓存只基于已保存 Pack，请先保存当前修改")
+            self.status.set(t("星球远景缓存只基于已保存 Pack，请先保存当前修改"))
             return
         self.overview_requested = True
         self.planet_refresh_requested = True
-        self._ensure_overview_window("正在后台生成星球远景缓存……")
+        self._ensure_overview_window(t("正在后台生成星球远景缓存……"))
         self._request_planet_cache()
 
     def _ensure_overview_window(self, text: str = "") -> None:
@@ -906,7 +906,7 @@ class SphereMapEditor:
             self.overview_window.lift()
             return
         window = tk.Toplevel(self.window)
-        window.title("星球远景缓存预览 512×256")
+        window.title(t("星球远景缓存预览 512×256"))
         window.resizable(False, False)
         label = ttk.Label(window, text=text, padding=12, anchor=tk.CENTER)
         label.pack(fill=tk.BOTH, expand=True)
@@ -921,7 +921,7 @@ class SphereMapEditor:
         try:
             image = tk.PhotoImage(master=self.overview_window, file=str(path))
         except tk.TclError as exc:
-            self.overview_label.configure(image="", text=f"无法读取远景缓存：{exc}")
+            self.overview_label.configure(image="", text=t("无法读取远景缓存：{exc}", exc=exc))
             return
         self.overview_image = image
         self.overview_label.configure(image=image, text="")
@@ -933,16 +933,16 @@ class SphereMapEditor:
         session = self.session
         projection = self.projection
         if topology is None or session is None or projection is None:
-            self.status.set("请先生成拓扑并新建或打开球面地图")
+            self.status.set(t("请先生成拓扑并新建或打开球面地图"))
             return
         if self.current_lod_level == 4:
-            self.status.set("当前是区块远景模式，未逐格投影；请放大后再绘制")
+            self.status.set(t("当前是区块远景模式，未逐格投影；请放大后再绘制"))
             return
         cell_id = projection.hit_test(event.x, event.y)
         if cell_id is None:
             return
         if cell_id in set(topology.pentagon_ids):
-            self.status.set(f"CellId {cell_id} 是隐藏五边形，不能绘制")
+            self.status.set(t("CellId {cell_id} 是隐藏五边形，不能绘制", cell_id=cell_id))
             return
         try:
             chunk_id, _local_index = session.layout.chunk_for_cell(cell_id)
@@ -951,11 +951,11 @@ class SphereMapEditor:
                 session.set_cell(cell_id, self.store, None)
             else:
                 if self.selected_brush_uid is None:
-                    self.status.set("请先选择一张有效笔刷")
+                    self.status.set(t("请先选择一张有效笔刷"))
                     return
                 record = self.records_by_uid.get(self.selected_brush_uid)
                 if record is None or record.state != "active":
-                    self.status.set("当前笔刷文件缺失，不能放置")
+                    self.status.set(t("当前笔刷文件缺失，不能放置"))
                     return
                 session.set_cell(
                     cell_id,
@@ -965,11 +965,11 @@ class SphereMapEditor:
                     self.rotation.get(),
                 )
         except SphereMapError as exc:
-            messagebox.showerror("编辑失败", str(exc), parent=self.window)
+            messagebox.showerror(t("编辑失败"), str(exc), parent=self.window)
             return
         self.selected_cell_id = cell_id
         self.distant_builder.invalidate((chunk_id,))
-        message = f"已修改 CellId {cell_id}，所在区块已标记为脏区块"
+        message = t("已修改 CellId {cell_id}，所在区块已标记为脏区块", cell_id=cell_id)
         self._push_gpu_cell_refresh(cell_id, message)
         self.status.set(message)
         self._redraw()
@@ -1013,7 +1013,7 @@ class SphereMapEditor:
             self.canvas.create_text(
                 width / 2,
                 height / 2,
-                text="正在准备球面拓扑、分块与层级可见性索引……",
+                text=t("正在准备球面拓扑、分块与层级可见性索引……"),
                 fill="#c8d0d8",
                 font=("TkDefaultFont", 13),
             )
@@ -1095,7 +1095,7 @@ class SphereMapEditor:
             except (SphereMapError, RuntimeError, ValueError) as exc:
                 message = str(exc)
                 if message != self.last_viewport_error:
-                    self.status.set(f"视口区块请求失败：{message}")
+                    self.status.set(t("视口区块请求失败：{message}", message=message))
                     self.last_viewport_error = message
 
         if distant_mode:
@@ -1106,32 +1106,31 @@ class SphereMapEditor:
         loaded_count = 0 if session is None else len(session.loaded_chunks)
         dirty_count = 0 if session is None else len(session.dirty_chunks)
         visible_cell_text = (
-            f"详细可见格子：{len(projection.visible_cell_ids):,}"
+            t("详细可见格子：{len:,}", len=len(projection.visible_cell_ids))
             if not distant_mode
-            else f"远景候选格子（未逐格投影）：{projection.candidate_cell_count:,}"
+            else t("远景候选格子（未逐格投影）：{candidate_cell_count:,}", candidate_cell_count=projection.candidate_cell_count)
         )
         self.summary.set(
             "\n".join(
                 (
-                    f"Cell：{layout.cell_count:,}  区块：{layout.chunk_count:,}",
+                    t("Cell：{cell_count:,}  区块：{chunk_count:,}", cell_count=layout.cell_count, chunk_count=layout.chunk_count),
                     visible_cell_text,
-                    f"当前可见区块：{len(projection.visible_chunk_ids):,}",
-                    f"层级查询：访问节点 {projection.visited_visibility_nodes:,}  精测区块 {projection.tested_visibility_chunks:,}",
-                    f"活动区块：{loaded_count}  脏区块：{dirty_count}",
-                    f"后台区块读取：{len(self.chunk_loader.pending)}",
-                    f"纹理：{BrushLodPolicy.description(self.current_lod_level)}",
-                    f"后台 LOD 生成：{self.lod_builder.pending_count()}",
-                    f"远景区块缓存：就绪 {len(self.distant_builder.ready)}  后台 {self.distant_builder.pending_count()}",
-                    f"星球远景缓存：{'生成中' if self.planet_builder.is_pending() else '就绪/待命'}",
-                    f"缩放：{self.viewport.zoom:.2f}×",
+                    t("当前可见区块：{len:,}", len=len(projection.visible_chunk_ids)),
+                    t("层级查询：访问节点 {visited_visibility_nodes:,}  精测区块 {tested_visibility_chunks:,}", visited_visibility_nodes=projection.visited_visibility_nodes, tested_visibility_chunks=projection.tested_visibility_chunks),
+                    t("活动区块：{loaded_count}  脏区块：{dirty_count}", loaded_count=loaded_count, dirty_count=dirty_count),
+                    t("后台区块读取：{len}", len=len(self.chunk_loader.pending)),
+                    t("纹理：{description}", description=BrushLodPolicy.description(self.current_lod_level)),
+                    t("后台 LOD 生成：{pending_count}", pending_count=self.lod_builder.pending_count()),
+                    t("远景区块缓存：就绪 {len}  后台 {pending_count}", len=len(self.distant_builder.ready), pending_count=self.distant_builder.pending_count()),
+                    t("星球远景缓存：{value}", value=t('生成中') if self.planet_builder.is_pending() else t('就绪/待命')),
+                    t("缩放：{zoom:.2f}×", zoom=self.viewport.zoom),
                 )
             )
         )
         self._update_selected_info()
         if session is not None and (unloaded or retained_dirty):
             self.status.set(
-                f"视口更新：后台读取 {len(self.chunk_loader.pending)}，"
-                f"释放 {len(unloaded)}，保留脏区块 {len(retained_dirty)}"
+                t("视口更新：后台读取 {len}，释放 {len2}，保留脏区块 {len3}", len=len(self.chunk_loader.pending), len2=len(unloaded), len3=len(retained_dirty))
             )
 
     def _draw_detail_cells(
@@ -1230,27 +1229,27 @@ class SphereMapEditor:
                 should_redraw = True
             if update.errors:
                 chunk_id, message = update.errors[0]
-                self.status.set(f"后台区块读取失败：Chunk {chunk_id}：{message}")
+                self.status.set(t("后台区块读取失败：Chunk {chunk_id}：{message}", chunk_id=chunk_id, message=message))
         lod_results = self.lod_builder.poll()
         if lod_results:
             should_redraw = True
             for result in lod_results:
                 if result.error:
-                    self.status.set(f"笔刷 LOD 生成失败：{result.error}")
+                    self.status.set(t("笔刷 LOD 生成失败：{error}", error=result.error))
                     break
         distant_results = self.distant_builder.poll()
         if distant_results:
             should_redraw = True
             for result in distant_results:
                 if result.error:
-                    self.status.set(f"区块远景缓存生成失败：Chunk {result.chunk_id}：{result.error}")
+                    self.status.set(t("区块远景缓存生成失败：Chunk {chunk_id}：{error}", chunk_id=result.chunk_id, error=result.error))
                     break
         planet_result = self.planet_builder.poll()
         if planet_result is not None:
             if planet_result.error:
-                self.status.set(f"星球远景缓存生成失败：{planet_result.error}")
+                self.status.set(t("星球远景缓存生成失败：{error}", error=planet_result.error))
             else:
-                self.status.set("星球远景缓存已生成")
+                self.status.set(t("星球远景缓存已生成"))
             self._request_planet_cache()
             should_redraw = True
         elif self.planet_refresh_requested and not self.planet_builder.is_pending():
@@ -1309,17 +1308,17 @@ class SphereMapEditor:
         topology = self.topology
         layout = self.layout
         if cell_id is None or topology is None or layout is None:
-            self.selected_info.set("未选择格子")
+            self.selected_info.set(t("未选择格子"))
             return
         chunk_id, local_index = layout.chunk_for_cell(cell_id)
         uid, rotation = self._cell_brush_state(cell_id)
         self.selected_info.set(
             "\n".join(
                 (
-                    f"CellId：{cell_id}",
-                    f"ChunkId：{chunk_id}  局部序号：{local_index}",
-                    f"笔刷 UID：{uid or '空'}",
-                    f"旋转：{rotation * 60}°",
+                    t("CellId：{cell_id}", cell_id=cell_id),
+                    t("ChunkId：{chunk_id}  局部序号：{local_index}", chunk_id=chunk_id, local_index=local_index),
+                    t("笔刷 UID：{value}", value=uid or t('空')),
+                    t("旋转：{value}°", value=rotation * 60),
                 )
             )
         )
@@ -1337,8 +1336,8 @@ class SphereMapEditor:
         if session is None or (not session.dirty_chunks and not session.brush_table_dirty):
             return True
         return messagebox.askyesno(
-            "尚未保存",
-            "当前球面地图有未保存修改，确定继续吗？",
+            t("尚未保存"),
+            t("当前球面地图有未保存修改，确定继续吗？"),
             parent=self.window,
         )
 

@@ -9,6 +9,7 @@ from pathlib import Path
 
 from .brush_catalog import BrushRecord
 from .png_pixels import add_edge_padding, atomic_write_png, read_png_pixels, resize_nearest
+from .i18n import t
 
 LOD_EFFECTIVE_SIZES = (512, 256, 128, 64)
 LOD_PADDING = 4
@@ -181,7 +182,7 @@ class BrushLodPolicy:
     def description(level: int) -> str:
         if 0 <= level < 4:
             return f"LOD{level} {LOD_EFFECTIVE_SIZES[level]}×{LOD_EFFECTIVE_SIZES[level]}"
-        return "远景已保存地表（逐格纹理暂停，仍可绘制）"
+        return t("远景已保存地表（逐格纹理暂停，仍可绘制）")
 
 
 @dataclass(frozen=True)

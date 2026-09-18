@@ -35,6 +35,7 @@ from .production_visibility import (
 from .sphere_map_store import SphereMapSession, SphereMapStore
 from .stream_scheduler import StreamSchedule, VisibleChunkScheduler
 from .zoom_tiers import visible_cells_estimate
+from .i18n import t
 
 
 class ProductionStreamingError(RuntimeError):
@@ -297,7 +298,7 @@ class ProductionGpuStreamingController:
                 mode="detail",
                 candidate_cells=query.candidate_cells,
                 changed=False,
-                description=f"固定 LOD{self.stream.lod_level}",
+                description=t("固定 LOD{lod_level}", lod_level=self.stream.lod_level),
             )
 
         with self.lock:
@@ -319,8 +320,7 @@ class ProductionGpuStreamingController:
                     candidate_cells=lod.candidate_cells,
                     changed=self.lod_controller.level != 4,
                     description=(
-                        f"{lod.description}｜候选区块 {len(query.chunk_ids):,} 超出 "
-                        f"{self.maximum_visible_chunks:,}，暂用远景地表"
+                        t("{description}｜候选区块 {len:,} 超出 {maximum_visible_chunks:,}，暂用远景地表", description=lod.description, len=len(query.chunk_ids), maximum_visible_chunks=self.maximum_visible_chunks)
                     ),
                     tier=lod.tier,
                 )
@@ -460,8 +460,7 @@ class ProductionGpuStreamingController:
             if frame.lod.level >= 4:
                 selection_count = 0 if frame.aggregate_selection is None else len(frame.aggregate_selection.node_ids)
                 message = (
-                    f"远景 LOD4：显示实时地表纹理（覆盖 {selection_count:,} 个层级节点范围）；"
-                    "可直接绘制，未保存笔划会局部刷新"
+                    t("远景 LOD4：显示实时地表纹理（覆盖 {selection_count:,} 个层级节点范围）；可直接绘制，未保存笔划会局部刷新", selection_count=selection_count)
                 )
                 # The far view is the saved-surface sphere. Painting there is
                 # legitimate - picking resolves an exact CellId regardless of
@@ -469,10 +468,7 @@ class ProductionGpuStreamingController:
                 editable = True
             else:
                 message = (
-                    f"切换 {frame.lod.description}：区块 {len(frame.update.active_chunk_ids):,}，"
-                    f"实例 {frame.update.instance_count:,}；"
-                    f"加载 {frame.loaded_chunk_count:,}/{frame.total_chunk_count:,}"
-                    f"（{frame.load_percent}%）"
+                    t("切换 {description}：区块 {len:,}，实例 {instance_count:,}；加载 {loaded_chunk_count:,}/{total_chunk_count:,}（{load_percent}%）", description=frame.lod.description, len=len(frame.update.active_chunk_ids), instance_count=frame.update.instance_count, loaded_chunk_count=frame.loaded_chunk_count, total_chunk_count=frame.total_chunk_count, load_percent=frame.load_percent)
                 )
                 editable = True
             return GpuBatchResetPatch(
@@ -496,11 +492,8 @@ class ProductionGpuStreamingController:
             changed=update.changed,
             texture_uploads=frame.texture_uploads,
             message=(
-                f"{frame.lod.description}：区块 {len(update.active_chunk_ids):,}，"
-                f"实例 {update.instance_count:,}，候选格子 {frame.query.candidate_cells:,}；"
-                f"加载 {frame.loaded_chunk_count:,}/{frame.total_chunk_count:,}"
-                f"（{frame.load_percent}%）"
-                + ("，继续分批加载" if frame.has_more else "")
+                t("{description}：区块 {len:,}，实例 {instance_count:,}，候选格子 {candidate_cells:,}；加载 {loaded_chunk_count:,}/{total_chunk_count:,}（{load_percent}%）", description=frame.lod.description, len=len(update.active_chunk_ids), instance_count=update.instance_count, candidate_cells=frame.query.candidate_cells, loaded_chunk_count=frame.loaded_chunk_count, total_chunk_count=frame.total_chunk_count, load_percent=frame.load_percent)
+                + (t("，继续分批加载") if frame.has_more else "")
             ),
             lod_level=frame.lod.level,
             padded_size=self.stream.lod_cache.padded_size(frame.lod.level),
@@ -564,7 +557,7 @@ class ProductionGpuStreamingController:
     def build_aggregate_cache(self) -> AggregateBuildReport:
         with self.lock:
             if self.session.dirty_chunks or self.session.brush_table_dirty:
-                raise ProductionStreamingError("请先保存地图，再构建聚合远景缓存")
+                raise ProductionStreamingError(t("请先保存地图，再构建聚合远景缓存"))
             return self.aggregate_cache.build_all(
                 self.aggregate_hierarchy,
                 self.layout,

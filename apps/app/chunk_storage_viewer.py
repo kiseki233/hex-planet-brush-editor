@@ -15,20 +15,21 @@ from .chunk_visibility import build_chunk_visibility_index, write_chunk_visibili
 from .paths import ProjectPaths
 from .sphere_map_store import SphereMapError, SphereMapSession, SphereMapStore
 from .topology import DualTopology, generate_dual_topology, write_topology_cache
+from .i18n import t
 
 
 class ChunkStorageViewer:
     def __init__(self, parent: tk.Misc, paths: ProjectPaths) -> None:
         self.paths = paths
         self.window = tk.Toplevel(parent)
-        self.window.title("球面分块、层级可见性与 Pack 检查器 v1.3.1")
+        self.window.title(t("球面分块、层级可见性与 Pack 检查器 v1.3.1"))
         self.window.geometry("920x720")
         self.window.minsize(740, 560)
 
         self.frequency = tk.StringVar(value="16")
         self.map_name = tk.StringVar(value="planet_chunk_test_f16")
-        self.status = tk.StringVar(value="先生成拓扑和稳定分块")
-        self.summary = tk.StringVar(value="尚未生成")
+        self.status = tk.StringVar(value=t("先生成拓扑和稳定分块"))
+        self.summary = tk.StringVar(value=t("尚未生成"))
         self.topology: DualTopology | None = None
         self.layout: ChunkLayout | None = None
         self.session: SphereMapSession | None = None
@@ -45,11 +46,11 @@ class ChunkStorageViewer:
         root.columnconfigure(1, weight=1)
         root.rowconfigure(0, weight=1)
 
-        controls = ttk.LabelFrame(root, text="生成与存储操作", padding=10)
+        controls = ttk.LabelFrame(root, text=t("生成与存储操作"), padding=10)
         controls.grid(row=0, column=0, sticky="ns", padx=(0, 10))
         controls.columnconfigure(0, weight=1)
 
-        ttk.Label(controls, text="测试细分频率").grid(row=0, column=0, sticky="w")
+        ttk.Label(controls, text=t("测试细分频率")).grid(row=0, column=0, sticky="w")
         self.frequency_combo = ttk.Combobox(
             controls,
             textvariable=self.frequency,
@@ -62,19 +63,19 @@ class ChunkStorageViewer:
 
         self.generate_button = ttk.Button(
             controls,
-            text="生成拓扑、分块与层级索引",
+            text=t("生成拓扑、分块与层级索引"),
             command=self.generate_layout,
         )
         self.generate_button.grid(row=2, column=0, sticky="ew")
 
         ttk.Separator(controls).grid(row=3, column=0, sticky="ew", pady=12)
-        ttk.Label(controls, text="球面测试地图名称").grid(row=4, column=0, sticky="w")
+        ttk.Label(controls, text=t("球面测试地图名称")).grid(row=4, column=0, sticky="w")
         ttk.Entry(controls, textvariable=self.map_name, width=26).grid(
             row=5, column=0, sticky="ew", pady=(2, 8)
         )
         self.create_button = ttk.Button(
             controls,
-            text="创建或打开分块地图",
+            text=t("创建或打开分块地图"),
             command=self.create_or_open_map,
             state=tk.DISABLED,
         )
@@ -82,7 +83,7 @@ class ChunkStorageViewer:
 
         self.write_button = ttk.Button(
             controls,
-            text="写入跨区块测试状态",
+            text=t("写入跨区块测试状态"),
             command=self.write_test_states,
             state=tk.DISABLED,
         )
@@ -90,7 +91,7 @@ class ChunkStorageViewer:
 
         self.verify_button = ttk.Button(
             controls,
-            text="随机读取并验证全部区块",
+            text=t("随机读取并验证全部区块"),
             command=self.verify_map,
             state=tk.DISABLED,
         )
@@ -98,7 +99,7 @@ class ChunkStorageViewer:
 
         self.compact_button = ttk.Button(
             controls,
-            text="分析并整理 Pack 历史数据",
+            text=t("分析并整理 Pack 历史数据"),
             command=self.compact_map,
             state=tk.DISABLED,
         )
@@ -106,7 +107,7 @@ class ChunkStorageViewer:
 
         self.recover_button = ttk.Button(
             controls,
-            text="检查/恢复中断的 Pack 整理",
+            text=t("检查/恢复中断的 Pack 整理"),
             command=self.recover_compaction,
             state=tk.DISABLED,
         )
@@ -116,16 +117,16 @@ class ChunkStorageViewer:
         ttk.Label(
             controls,
             text=(
-                "本检查器验证的是实际文件链路：\n"
+                t("本检查器验证的是实际文件链路：\n"
                 "chunks.idx → index.bin → pack_xxxx.bin。\n\n"
                 "Pack 整理只保留 index.bin 当前引用的区块版本，"
-                "并提供中断恢复标记与旧文件回滚。"
+                "并提供中断恢复标记与旧文件回滚。")
             ),
             wraplength=230,
             justify=tk.LEFT,
         ).grid(row=12, column=0, sticky="w")
 
-        result_frame = ttk.LabelFrame(root, text="分块与存储结果", padding=10)
+        result_frame = ttk.LabelFrame(root, text=t("分块与存储结果"), padding=10)
         result_frame.grid(row=0, column=1, sticky="nsew")
         result_frame.rowconfigure(1, weight=1)
         result_frame.columnconfigure(0, weight=1)
@@ -158,7 +159,7 @@ class ChunkStorageViewer:
         self.verify_button.configure(state=tk.DISABLED)
         self.compact_button.configure(state=tk.DISABLED)
         self.recover_button.configure(state=tk.DISABLED)
-        self.summary.set("频率已改变，需要重新生成分块")
+        self.summary.set(t("频率已改变，需要重新生成分块"))
 
     def _set_busy(self, busy: bool) -> None:
         self.busy = busy
@@ -183,10 +184,10 @@ class ChunkStorageViewer:
         try:
             frequency = int(self.frequency.get())
         except ValueError:
-            messagebox.showerror("错误", "细分频率无效", parent=self.window)
+            messagebox.showerror(t("错误"), t("细分频率无效"), parent=self.window)
             return
         self._set_busy(True)
-        self.status.set(f"正在生成 frequency={frequency} 的拓扑、分块与层级索引……")
+        self.status.set(t("正在生成 frequency={frequency} 的拓扑、分块与层级索引……", frequency=frequency))
         worker = threading.Thread(target=self._generate_worker, args=(frequency,), daemon=True)
         worker.start()
         self.window.after(50, self._poll_result)
@@ -224,8 +225,8 @@ class ChunkStorageViewer:
             return
         self._set_busy(False)
         if state == "error":
-            self.status.set("操作失败")
-            messagebox.showerror("失败", str(value), parent=self.window)
+            self.status.set(t("操作失败"))
+            messagebox.showerror(t("失败"), str(value), parent=self.window)
             return
         if state == "layout":
             topology, layout, visibility, topology_dir, layout_path, visibility_path = value
@@ -236,28 +237,27 @@ class ChunkStorageViewer:
             sizes = [len(chunk.cell_ids) for chunk in layout.chunks]
             average = sum(sizes) / len(sizes)
             self.summary.set(
-                f"Cell：{layout.cell_count:,}    区块：{layout.chunk_count:,}    "
-                f"最小/平均/最大：{min(sizes)}/{average:.1f}/{max(sizes)}"
+                t("Cell：{cell_count:,}    区块：{chunk_count:,}    最小/平均/最大：{min}/{average:.1f}/{max}", cell_count=layout.cell_count, chunk_count=layout.chunk_count, min=min(sizes), average=average, max=max(sizes))
             )
             self._replace_output(
                 "\n".join(
                     (
-                        "稳定分块验证通过。",
-                        f"细分频率：{layout.frequency}",
-                        f"基础面：20",
-                        f"目标区块容量：{layout.target_cells}",
-                        f"连通区块：{'通过' if validation.connected_chunks else '失败'}",
-                        f"拓扑哈希：{layout.topology_hash}",
-                        f"分块哈希：{layout.stable_hash}",
-                        f"层级节点：{visibility.node_count}",
-                        f"层级索引哈希：{visibility.stable_hash}",
-                        f"拓扑缓存：{topology_dir}",
-                        f"分块索引：{layout_path}",
-                        f"可见性索引：{visibility_path}",
+                        t("稳定分块验证通过。"),
+                        t("细分频率：{frequency}", frequency=layout.frequency),
+                        t("基础面：20"),
+                        t("目标区块容量：{target_cells}", target_cells=layout.target_cells),
+                        t("连通区块：{value}", value=t('通过') if validation.connected_chunks else t('失败')),
+                        t("拓扑哈希：{topology_hash}", topology_hash=layout.topology_hash),
+                        t("分块哈希：{stable_hash}", stable_hash=layout.stable_hash),
+                        t("层级节点：{node_count}", node_count=visibility.node_count),
+                        t("层级索引哈希：{stable_hash}", stable_hash=visibility.stable_hash),
+                        t("拓扑缓存：{topology_dir}", topology_dir=topology_dir),
+                        t("分块索引：{layout_path}", layout_path=layout_path),
+                        t("可见性索引：{visibility_path}", visibility_path=visibility_path),
                     )
                 )
             )
-            self.status.set("拓扑、分块和层级可见性缓存已写入")
+            self.status.set(t("拓扑、分块和层级可见性缓存已写入"))
             self.create_button.configure(state=tk.NORMAL)
             self.recover_button.configure(state=tk.NORMAL)
 
@@ -271,20 +271,19 @@ class ChunkStorageViewer:
             if recovery.required:
                 self.recover_button.configure(state=tk.NORMAL)
                 messagebox.showwarning(
-                    "需要恢复 Pack 整理",
-                    f"地图存在未完成的 Pack 整理事务。\n阶段：{recovery.phase}\n"
-                    "请先点击“检查/恢复中断的 Pack 整理”。",
+                    t("需要恢复 Pack 整理"),
+                    t("地图存在未完成的 Pack 整理事务。\n阶段：{phase}\n请先点击“检查/恢复中断的 Pack 整理”。", phase=recovery.phase),
                     parent=self.window,
                 )
                 return
             if name in self.store.list_maps():
                 session = self.store.open(name, layout)
-                action = "已打开"
+                action = t("已打开")
             else:
                 session = self.store.create_blank(name, layout)
-                action = "已创建"
+                action = t("已创建")
         except (SphereMapError, OSError) as exc:
-            messagebox.showerror("地图存储失败", str(exc), parent=self.window)
+            messagebox.showerror(t("地图存储失败"), str(exc), parent=self.window)
             return
         self.session = session
         self.write_button.configure(state=tk.NORMAL)
@@ -297,18 +296,18 @@ class ChunkStorageViewer:
             "\n\n"
             + "\n".join(
                 (
-                    f"{action}球面分块地图：{session.name}",
-                    f"index.bin：{stats['index_bytes']:,} 字节",
-                    f"Pack 文件：{stats['pack_count']} 个",
-                    f"Pack 总量：{stats['pack_bytes']:,} 字节",
-                    f"当前有效数据：{analysis.live_bytes:,} 字节",
-                    f"可回收历史数据：{analysis.reclaimable_bytes:,} 字节",
-                    f"历史失效区块块体：{analysis.orphan_blocks}",
-                    f"地图目录：{session.map_dir}",
+                    t("{action}球面分块地图：{name}", action=action, name=session.name),
+                    t("index.bin：{stats:,} 字节", stats=stats['index_bytes']),
+                    t("Pack 文件：{stats} 个", stats=stats['pack_count']),
+                    t("Pack 总量：{stats:,} 字节", stats=stats['pack_bytes']),
+                    t("当前有效数据：{live_bytes:,} 字节", live_bytes=analysis.live_bytes),
+                    t("可回收历史数据：{reclaimable_bytes:,} 字节", reclaimable_bytes=analysis.reclaimable_bytes),
+                    t("历史失效区块块体：{orphan_blocks}", orphan_blocks=analysis.orphan_blocks),
+                    t("地图目录：{map_dir}", map_dir=session.map_dir),
                 )
             )
         )
-        self.status.set(f"{action}地图 {session.name}")
+        self.status.set(t("{action}地图 {name}", action=action, name=session.name))
 
     def write_test_states(self) -> None:
         session = self.session
@@ -317,8 +316,8 @@ class ChunkStorageViewer:
         editable_cells = [cell_id for cell_id in range(12, session.layout.cell_count)]
         if not editable_cells:
             messagebox.showinfo(
-                "没有可编辑六边形",
-                "frequency=1 只有 12 个保留五边形，请选择 frequency=2 或更高值。",
+                t("没有可编辑六边形"),
+                t("frequency=1 只有 12 个保留五边形，请选择 frequency=2 或更高值。"),
                 parent=self.window,
             )
             return
@@ -333,7 +332,7 @@ class ChunkStorageViewer:
                     cell_id,
                     self.store,
                     "00000000-0000-0000-0000-000000000003",
-                    "测试/阶段三测试笔刷.png",
+                    t("测试/阶段三测试笔刷.png"),
                     rotation * 2,
                 )
             dirty_before = tuple(sorted(session.dirty_chunks))
@@ -344,7 +343,7 @@ class ChunkStorageViewer:
             results = [reopened.brush_uid_for_cell(cell_id, self.store) for cell_id in candidates]
             self.session = reopened
         except (SphereMapError, OSError) as exc:
-            messagebox.showerror("写入失败", str(exc), parent=self.window)
+            messagebox.showerror(t("写入失败"), str(exc), parent=self.window)
             return
 
         changed_packs = [
@@ -356,21 +355,21 @@ class ChunkStorageViewer:
             "\n\n"
             + "\n".join(
                 (
-                    f"增量保存区块：{', '.join(map(str, dirty_before))}",
-                    f"实际追加 Pack：{', '.join(map(str, changed_packs))}",
-                    f"重新打开读取：{results}",
-                    "旧区块块体保留，新 index.bin 已原子替换。",
+                    t("增量保存区块：{join}", join=', '.join(map(str, dirty_before))),
+                    t("实际追加 Pack：{join}", join=', '.join(map(str, changed_packs))),
+                    t("重新打开读取：{results}", results=results),
+                    t("旧区块块体保留，新 index.bin 已原子替换。"),
                 )
             )
         )
-        self.status.set("跨区块状态已增量保存并重新读取")
+        self.status.set(t("跨区块状态已增量保存并重新读取"))
 
     def verify_map(self) -> None:
         session = self.session
         if session is None or self.busy:
             return
         self._set_busy(True)
-        self.status.set("正在随机读取并校验全部区块……")
+        self.status.set(t("正在随机读取并校验全部区块……"))
         worker = threading.Thread(target=self._verify_worker, args=(session,), daemon=True)
         worker.start()
         self.window.after(50, self._poll_verify)
@@ -393,22 +392,22 @@ class ChunkStorageViewer:
             return
         self._set_busy(False)
         if state == "error":
-            self.status.set("验证失败")
-            messagebox.showerror("验证失败", str(value), parent=self.window)
+            self.status.set(t("验证失败"))
+            messagebox.showerror(t("验证失败"), str(value), parent=self.window)
             return
         report = value
         self._append_output(
             "\n\n"
             + "\n".join(
                 (
-                    f"全部区块读取验证：{'通过' if report.valid else '失败'}",
-                    f"检查区块：{report.checked_chunks}",
-                    f"损坏区块：{list(report.failed_chunks)}",
+                    t("全部区块读取验证：{value}", value=t('通过') if report.valid else t('失败')),
+                    t("检查区块：{checked_chunks}", checked_chunks=report.checked_chunks),
+                    t("损坏区块：{list}", list=list(report.failed_chunks)),
                     *(report.issues[:10]),
                 )
             )
         )
-        self.status.set("全部区块读取验证完成")
+        self.status.set(t("全部区块读取验证完成"))
 
     def compact_map(self) -> None:
         session = self.session
@@ -416,8 +415,8 @@ class ChunkStorageViewer:
             return
         if session.dirty_chunks or session.brush_table_dirty:
             messagebox.showwarning(
-                "需要先保存",
-                "Pack 整理前必须先保存全部脏区块和笔刷表修改。",
+                t("需要先保存"),
+                t("Pack 整理前必须先保存全部脏区块和笔刷表修改。"),
                 parent=self.window,
             )
             return
@@ -425,35 +424,32 @@ class ChunkStorageViewer:
             recovery = self.store.compaction_recovery_state(session.name)
             if recovery.required:
                 messagebox.showwarning(
-                    "需要恢复",
-                    f"当前存在未完成的整理事务：{recovery.phase}",
+                    t("需要恢复"),
+                    t("当前存在未完成的整理事务：{phase}", phase=recovery.phase),
                     parent=self.window,
                 )
                 return
             analysis = self.store.analyze_storage(session)
         except (SphereMapError, OSError) as exc:
-            messagebox.showerror("分析失败", str(exc), parent=self.window)
+            messagebox.showerror(t("分析失败"), str(exc), parent=self.window)
             return
         if analysis.reclaimable_bytes <= 0 and analysis.orphan_blocks <= 0:
             messagebox.showinfo(
-                "无需整理",
-                "当前 Pack 没有可回收的历史区块数据。",
+                t("无需整理"),
+                t("当前 Pack 没有可回收的历史区块数据。"),
                 parent=self.window,
             )
             return
         if not messagebox.askyesno(
-            "整理 Pack",
+            t("整理 Pack"),
             (
-                f"当前 Pack：{analysis.physical_bytes:,} 字节\n"
-                f"预计可回收：{analysis.reclaimable_bytes:,} 字节\n"
-                f"历史失效块体：{analysis.orphan_blocks}\n\n"
-                "程序会先生成并验证新 Pack，再切换正式文件。继续吗？"
+                t("当前 Pack：{physical_bytes:,} 字节\n预计可回收：{reclaimable_bytes:,} 字节\n历史失效块体：{orphan_blocks}\n\n程序会先生成并验证新 Pack，再切换正式文件。继续吗？", physical_bytes=analysis.physical_bytes, reclaimable_bytes=analysis.reclaimable_bytes, orphan_blocks=analysis.orphan_blocks)
             ),
             parent=self.window,
         ):
             return
         self._set_busy(True)
-        self.status.set("正在重写、验证并原子切换 Pack……")
+        self.status.set(t("正在重写、验证并原子切换 Pack……"))
         threading.Thread(target=self._compact_worker, args=(session,), daemon=True).start()
         self.window.after(50, self._poll_compact)
 
@@ -475,25 +471,25 @@ class ChunkStorageViewer:
             return
         self._set_busy(False)
         if state == "error":
-            self.status.set("Pack 整理失败")
-            messagebox.showerror("Pack 整理失败", str(value), parent=self.window)
+            self.status.set(t("Pack 整理失败"))
+            messagebox.showerror(t("Pack 整理失败"), str(value), parent=self.window)
             return
         report = value
         self._append_output(
             "\n\n"
             + "\n".join(
                 (
-                    "Pack 历史数据整理完成。",
-                    f"整理前：{report.before.physical_bytes:,} 字节",
-                    f"整理后：{report.after.physical_bytes:,} 字节",
-                    f"实际回收：{report.bytes_reclaimed:,} 字节",
-                    f"移除失效块体：{report.before.orphan_blocks - report.after.orphan_blocks}",
-                    f"验证区块：{report.verified_chunks}",
-                    "index.bin 与全部 Pack 已重新验证。",
+                    t("Pack 历史数据整理完成。"),
+                    t("整理前：{physical_bytes:,} 字节", physical_bytes=report.before.physical_bytes),
+                    t("整理后：{physical_bytes:,} 字节", physical_bytes=report.after.physical_bytes),
+                    t("实际回收：{bytes_reclaimed:,} 字节", bytes_reclaimed=report.bytes_reclaimed),
+                    t("移除失效块体：{value}", value=report.before.orphan_blocks - report.after.orphan_blocks),
+                    t("验证区块：{verified_chunks}", verified_chunks=report.verified_chunks),
+                    t("index.bin 与全部 Pack 已重新验证。"),
                 )
             )
         )
-        self.status.set(f"Pack 整理完成，回收 {report.bytes_reclaimed:,} 字节")
+        self.status.set(t("Pack 整理完成，回收 {bytes_reclaimed:,} 字节", bytes_reclaimed=report.bytes_reclaimed))
 
     def recover_compaction(self) -> None:
         layout = self.layout
@@ -503,26 +499,26 @@ class ChunkStorageViewer:
         try:
             state = self.store.compaction_recovery_state(name)
         except SphereMapError as exc:
-            messagebox.showerror("检查失败", str(exc), parent=self.window)
+            messagebox.showerror(t("检查失败"), str(exc), parent=self.window)
             return
         if not state.required:
-            messagebox.showinfo("无需恢复", "没有检测到中断的 Pack 整理事务。", parent=self.window)
+            messagebox.showinfo(t("无需恢复"), t("没有检测到中断的 Pack 整理事务。"), parent=self.window)
             return
         if state.phase == "orphaned_artifacts":
             messagebox.showerror(
-                "无法自动恢复",
-                state.details + "\n为避免误删文件，当前版本不会在缺少事务标记时自动处理。",
+                t("无法自动恢复"),
+                state.details + t("\n为避免误删文件，当前版本不会在缺少事务标记时自动处理。"),
                 parent=self.window,
             )
             return
         if not messagebox.askyesno(
-            "恢复 Pack 整理",
-            f"检测到中断阶段：{state.phase}。\n程序会验证新文件；不完整时自动回滚旧文件。继续吗？",
+            t("恢复 Pack 整理"),
+            t("检测到中断阶段：{phase}。\n程序会验证新文件；不完整时自动回滚旧文件。继续吗？", phase=state.phase),
             parent=self.window,
         ):
             return
         self._set_busy(True)
-        self.status.set("正在恢复中断的 Pack 整理……")
+        self.status.set(t("正在恢复中断的 Pack 整理……"))
         threading.Thread(target=self._recover_worker, args=(name, layout), daemon=True).start()
         self.window.after(50, self._poll_recover)
 
@@ -545,8 +541,8 @@ class ChunkStorageViewer:
             return
         self._set_busy(False)
         if state == "error":
-            self.status.set("Pack 恢复失败")
-            messagebox.showerror("Pack 恢复失败", str(value), parent=self.window)
+            self.status.set(t("Pack 恢复失败"))
+            messagebox.showerror(t("Pack 恢复失败"), str(value), parent=self.window)
             return
         report, session = value
         self.session = session
@@ -554,23 +550,23 @@ class ChunkStorageViewer:
         self.verify_button.configure(state=tk.NORMAL)
         self.compact_button.configure(state=tk.NORMAL)
         action_names = {
-            "finalized_new": "保留并完成新 Pack",
-            "rolled_back": "回滚到旧 Pack",
-            "discarded_stage": "删除未完成临时 Pack 并保留原地图",
-            "none": "无需处理",
+            "finalized_new": t("保留并完成新 Pack"),
+            "rolled_back": t("回滚到旧 Pack"),
+            "discarded_stage": t("删除未完成临时 Pack 并保留原地图"),
+            "none": t("无需处理"),
         }
         action = action_names.get(report.action, report.action)
         self._append_output(
             "\n\n"
             + "\n".join(
                 (
-                    f"中断恢复结果：{action}",
-                    f"验证区块：{report.verified_chunks}",
-                    "恢复标记和临时文件已经清理。",
+                    t("中断恢复结果：{action}", action=action),
+                    t("验证区块：{verified_chunks}", verified_chunks=report.verified_chunks),
+                    t("恢复标记和临时文件已经清理。"),
                 )
             )
         )
-        self.status.set(f"Pack 恢复完成：{action}")
+        self.status.set(t("Pack 恢复完成：{action}", action=action))
 
     @staticmethod
     def _storage_stats(map_dir: Path) -> dict[str, int]:
