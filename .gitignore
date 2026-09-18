@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Runtime state written by the editor
+apps/runtime/
+art/maps/*/
+art/data/*
+!art/data/.gitkeep
+
+# Brush catalog and regenerable LOD cache
+# The catalog is rebuilt from whatever PNG tiles are on disk.
+art/brushes/.catalog/
+
+# Build output
+build/
+dist/
+out/
+*.exe
+*.dll
+*.pdb
+
+# Logs
+*.log
+
+# Editors and OS
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+.DS_Store
