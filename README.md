@@ -95,7 +95,7 @@ python -m unittest discover -s tests
 
 ```text
 apps/
-  app/          53 modules: topology, storage, LOD, GPU streaming, UI
+  app/          52 modules: topology, storage, LOD, GPU streaming, UI
     locales/    en.json, ja.json (Chinese is the source language)
   tests/        265 tests
   tools/        placeholder brush generator, message extractor
